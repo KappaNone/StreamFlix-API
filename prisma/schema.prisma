@@ -15,3 +15,45 @@ model User {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }
+
+model Title {
+  id              Int        @id @default(autoincrement())
+  name            String
+  type            TitleType
+  description     String
+  releaseYear     Int
+
+  episodes        Episode[] @relation("TitleEpisodes")
+  seasons         Season[]  @relation("TitleSeasons")
+}
+
+model Season {
+  id            Int       @id @default(autoincrement())
+  titleId       Int
+  seasonNumber  Int
+  // Relations
+  title         Title     @relation("TitleSeasons", fields: [titleId], references: [id], onDelete: Cascade)
+  episodes      Episode[]   @relation("SeasonEpisodes")
+}
+
+model Episode {
+  id              Int     @id @default(autoincrement())
+  titleId         Int
+  seasonId        Int?    // Can be null for movies
+  episodeNumber   Int
+  name            String? // Can be null for movies
+  description     String? // Can be null for movies
+  durationSeconds Int
+  videoUrl        String
+
+  // Relations
+  title           Title     @relation("TitleEpisodes", fields: [titleId], references: [id], onDelete: Cascade)
+  season          Season?   @relation("SeasonEpisodes", fields: [seasonId], references: [id], onDelete: SetNull)
+
+  @@unique([seasonId, episodeNumber])
+}
+
+enum TitleType {
+  MOVIE
+  SERIES
+}
