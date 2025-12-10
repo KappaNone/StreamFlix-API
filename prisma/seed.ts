@@ -1,142 +1,263 @@
 import { PrismaClient, TitleType, QualityName } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
-async function main() {
-  // Clear existing data (delete in correct order due to FK constraints)
-  await prisma.episode.deleteMany({});
-  await prisma.season.deleteMany({});
-  await prisma.title.deleteMany({});
-  await prisma.user.deleteMany({});
-  await prisma.titleQuality.deleteMany({});
-  await prisma.quality.deleteMany({});
+// TMDB API Configuration
+const TMDB_API_KEY = process.env.TMDB_API_KEY;
+const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 
-  console.log('Cleared existing data');
+interface TMDBMovie {
+  id: number;
+  title: string;
+  overview: string;
+  release_date: string;
+}
+
+interface TMDBTVShow {
+  id: number;
+  name: string;
+  overview: string;
+  first_air_date: string;
+  number_of_seasons: number;
+}
+
+interface TMDBSeason {
+  season_number: number;
+  episode_count: number;
+  episodes?: TMDBEpisode[];
+}
+
+interface TMDBEpisode {
+  episode_number: number;
+  name: string;
+  overview: string;
+  runtime: number;
+}
+
+async function fetchFromTMDB(endpoint: string) {
+  const response = await fetch(`${TMDB_BASE_URL}${endpoint}?api_key=${TMDB_API_KEY}`);
+  if (!response.ok) {
+    throw new Error(`TMDB API error: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+async function getPopularMovies(count: number = 20): Promise<TMDBMovie[]> {
+  const data = await fetchFromTMDB('/movie/popular');
+  return data.results.slice(0, count);
+}
+
+async function getPopularTVShows(count: number = 10): Promise<TMDBTVShow[]> {
+  const data = await fetchFromTMDB('/tv/popular');
+  return data.results.slice(0, count);
+}
+
+async function getTVShowDetails(tvId: number): Promise<TMDBTVShow> {
+  return await fetchFromTMDB(`/tv/${tvId}`);
+}
+
+async function getSeasonDetails(tvId: number, seasonNumber: number): Promise<TMDBSeason> {
+  return await fetchFromTMDB(`/tv/${tvId}/season/${seasonNumber}`);
+}
+
+function getRandomQualities(qualityIds: number[]): number[] {
+  const numQualities = Math.floor(Math.random() * 2) + 1; // 1-2 qualities
+  const shuffled = [...qualityIds].sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, numQualities);
+}
+
+async function main() {
+  console.log('Starting seed with TMDB API data...');
+
+  // Clear existing data
+  await prisma.episode.deleteMany();
+  await prisma.season.deleteMany();
+  await prisma.titleQuality.deleteMany();
+  await prisma.title.deleteMany();
+  await prisma.quality.deleteMany();
+  await prisma.user.deleteMany();
 
   // Create Users
-  await prisma.user.createMany({
+  const hashedPassword = await bcrypt.hash('password123', 10);
+  
+  const users = await prisma.user.createMany({
     data: [
-      { name: 'Alice', email: 'alice@example.com', password: 'password1' },
-      { name: 'Bob', email: 'bob@example.com', password: 'password2' },
+      {
+        name: 'John Doe',
+        email: 'john@example.com',
+        password: hashedPassword,
+      },
+      {
+        name: 'Jane Smith',
+        email: 'jane@example.com',
+        password: hashedPassword,
+      },
+      {
+        name: 'Bob Johnson',
+        email: 'bob@example.com',
+        password: hashedPassword,
+      },
     ],
   });
 
-  console.log('Users created');
+  console.log(`Created ${users.count} users`);
 
-  // Create Movie
-  const movie1 = await prisma.title.create({
-    data: {
-      name: 'The Great Movie',
-      type: TitleType.MOVIE,
-      description: 'An epic standalone film.',
-      releaseYear: 2020,
-    },
+  // Create Qualities
+  const sdQuality = await prisma.quality.create({
+    data: { name: QualityName.SD },
   });
 
-  console.log('Movie created:', movie1.id);
-
-  // Create Series
-  const series1 = await prisma.title.create({
-    data: {
-      name: 'Amazing Series',
-      type: TitleType.SERIES,
-      description: 'A serialized drama with multiple episodes.',
-      releaseYear: 2021,
-    },
+  const hdQuality = await prisma.quality.create({
+    data: { name: QualityName.HD },
   });
 
-  console.log('Series created:', series1.id);
-
-  // Create Seasons for Series
-  const season1 = await prisma.season.create({
-    data: {
-      titleId: series1.id,
-      seasonNumber: 1,
-    },
+  const uhdQuality = await prisma.quality.create({
+    data: { name: QualityName.UHD },
   });
 
-  const season2 = await prisma.season.create({
-    data: {
-      titleId: series1.id,
-      seasonNumber: 2,
-    },
-  });
+  const qualityIds = [sdQuality.id, hdQuality.id, uhdQuality.id];
 
-  console.log('Seasons created');
+  console.log('Created qualities');
 
-  // Create Episodes for Movie (no season)
-  await prisma.episode.create({
-    data: {
-      titleId: movie1.id,
-      episodeNumber: 1,
-      durationSeconds: 7200,
-      videoUrl: 'https://cdn.example.com/the-great-movie.mp4',
-      seasonId: null,
-    },
-  });
+  // Fetch and create Movies
+  console.log('Fetching movies from TMDB...');
+  const tmdbMovies = await getPopularMovies(15);
 
-  console.log('Movie episode created');
+  for (const movie of tmdbMovies) {
+    if (!movie.overview || !movie.release_date) continue;
 
-  // Create Episodes for Series Season 1
-  await prisma.episode.create({
-    data: {
-      titleId: series1.id,
-      seasonId: season1.id,
-      episodeNumber: 1,
-      name: 'Episode 1 - Pilot',
-      description: 'Pilot episode.',
-      durationSeconds: 2700,
-      videoUrl: 'https://cdn.example.com/amazing-series/s01e01.mp4',
-    },
-  });
+    const releaseYear = parseInt(movie.release_date.split('-')[0]);
+    const randomDuration = 5400 + Math.floor(Math.random() * 3600); // 90-150 minutes
 
-  await prisma.episode.create({
-    data: {
-      titleId: series1.id,
-      seasonId: season1.id,
-      episodeNumber: 2,
-      name: 'Episode 2 - The Next Step',
-      description: 'Second episode.',
-      durationSeconds: 2800,
-      videoUrl: 'https://cdn.example.com/amazing-series/s01e02.mp4',
-    },
-  });
+    try {
+      const createdMovie = await prisma.title.create({
+        data: {
+          name: movie.title,
+          type: TitleType.MOVIE,
+          description: movie.overview,
+          releaseYear: releaseYear,
+          episodes: {
+            create: {
+              episodeNumber: 1,
+              durationSeconds: randomDuration,
+              videoUrl: `https://cdn.example.com/movies/${movie.id}.mp4`,
+            },
+          },
+          qualities: {
+            create: getRandomQualities(qualityIds).map((qualityId) => ({
+              qualityId,
+            })),
+          },
+        },
+      });
 
-  console.log('Season 1 episodes created');
+      console.log(`Created movie: ${createdMovie.name} (${releaseYear})`);
+    } catch (error) {
+      console.error(`Error creating movie ${movie.title}:`, error);
+    }
+  }
 
-  // Create Episodes for Series Season 2
-  await prisma.episode.create({
-    data: {
-      titleId: series1.id,
-      seasonId: season2.id,
-      episodeNumber: 1,
-      name: 'Episode 1 - New Beginnings',
-      description: 'First episode of Season 2.',
-      durationSeconds: 2900,
-      videoUrl: 'https://cdn.example.com/amazing-series/s02e01.mp4',
-    },
-  });
+  // Fetch and create TV Series
+  console.log('Fetching TV shows from TMDB...');
+  const tmdbTVShows = await getPopularTVShows(5);
 
-  await prisma.episode.create({
-    data: {
-      titleId: series1.id,
-      seasonId: season2.id,
-      episodeNumber: 2,
-      name: 'Episode 2 - The Journey Continues',
-      description: 'Second episode of Season 2.',
-      durationSeconds: 3000,
-      videoUrl: 'https://cdn.example.com/amazing-series/s02e02.mp4',
-    },
-  });
+  for (const show of tmdbTVShows) {
+    if (!show.overview || !show.first_air_date) continue;
 
-  console.log('Season 2 episodes created');
-  console.log('Seeding finished successfully');
+    const releaseYear = parseInt(show.first_air_date.split('-')[0]);
+
+    try {
+      // Get full TV show details
+      const tvDetails = await getTVShowDetails(show.id);
+      
+      const createdSeries = await prisma.title.create({
+        data: {
+          name: tvDetails.name,
+          type: TitleType.SERIES,
+          description: tvDetails.overview,
+          releaseYear: releaseYear,
+          qualities: {
+            create: getRandomQualities(qualityIds).map((qualityId) => ({
+              qualityId,
+            })),
+          },
+        },
+      });
+
+      console.log(`Created series: ${createdSeries.name} (${releaseYear})`);
+
+      // Create seasons (limit to first 3 seasons for performance)
+      const maxSeasons = Math.min(tvDetails.number_of_seasons, 3);
+      
+      for (let seasonNum = 1; seasonNum <= maxSeasons; seasonNum++) {
+        try {
+          const seasonDetails = await getSeasonDetails(show.id, seasonNum);
+          
+          const season = await prisma.season.create({
+            data: {
+              titleId: createdSeries.id,
+              seasonNumber: seasonNum,
+            },
+          });
+
+          // Create episodes from TMDB data
+          if (seasonDetails.episodes && seasonDetails.episodes.length > 0) {
+            for (const episode of seasonDetails.episodes) {
+              const runtime = episode.runtime || 45; // Default to 45 minutes if not provided
+              
+              await prisma.episode.create({
+                data: {
+                  titleId: createdSeries.id,
+                  seasonId: season.id,
+                  episodeNumber: episode.episode_number,
+                  name: episode.name || `Episode ${episode.episode_number}`,
+                  description: episode.overview || `Season ${seasonNum}, Episode ${episode.episode_number}`,
+                  durationSeconds: runtime * 60,
+                  videoUrl: `https://cdn.example.com/series/${show.id}/s${seasonNum}/e${episode.episode_number}.mp4`,
+                },
+              });
+            }
+
+            console.log(`  Created season ${seasonNum} with ${seasonDetails.episodes.length} episodes`);
+          } else {
+            // Fallback if episode details aren't available
+            const episodeCount = seasonDetails.episode_count || 10;
+            for (let episodeNum = 1; episodeNum <= episodeCount; episodeNum++) {
+              await prisma.episode.create({
+                data: {
+                  titleId: createdSeries.id,
+                  seasonId: season.id,
+                  episodeNumber: episodeNum,
+                  name: `Episode ${episodeNum}`,
+                  description: `Season ${seasonNum}, Episode ${episodeNum}`,
+                  durationSeconds: 2700,
+                  videoUrl: `https://cdn.example.com/series/${show.id}/s${seasonNum}/e${episodeNum}.mp4`,
+                },
+              });
+            }
+
+            console.log(`  Created season ${seasonNum} with ${episodeCount} episodes`);
+          }
+
+          // Add delay to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 250));
+        } catch (error) {
+          console.error(`  Error creating season ${seasonNum}:`, error);
+        }
+      }
+    } catch (error) {
+      console.error(`Error creating series ${show.name}:`, error);
+    }
+  }
+
+  console.log('Seed completed successfully!');
 }
 
 main()
   .catch((e) => {
-    console.error('Seeding error:', e);
-    process.exitCode = 1;
+    console.error('Error during seed:', e);
+    process.exit(1);
   })
   .finally(async () => {
     await prisma.$disconnect();
