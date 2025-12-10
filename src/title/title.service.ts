@@ -1,10 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateTitleDto } from './dto/create-title.dto';
 import { UpdateTitleDto } from './dto/update-title.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
-export class TitlesService {
+export class TitleService {
   constructor(private prisma: PrismaService) {}
 
   create(createTitleDto: CreateTitleDto) {
@@ -17,8 +17,10 @@ export class TitlesService {
     return this.prisma.title.findMany();
   }
 
-  findOne(id: number) {
-    return this.prisma.title.findUniqueOrThrow({ where: { id } });
+  async findOne(id: number) {
+    const title = await this.prisma.title.findUnique({ where: { id } });
+    if (!title) { throw new NotFoundException(`Title ${id} not found`); }
+    return title
   }
 
   update(id: number, updateTitleDto: UpdateTitleDto) {

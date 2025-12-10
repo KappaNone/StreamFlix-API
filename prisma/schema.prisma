@@ -25,6 +25,31 @@ model Title {
 
   episodes        Episode[] @relation("TitleEpisodes")
   seasons         Season[]  @relation("TitleSeasons")
+  qualities       TitleQuality[] @relation("TitleQualities")
+}
+
+model Quality {
+  id              Int       @id @default(autoincrement())
+  name            QualityName
+  
+  titleQualities  TitleQuality[] @relation("QualityTitles")
+}
+
+enum QualityName {
+  SD
+  HD
+  UHD
+}
+
+model TitleQuality {
+  titleId   Int
+  qualityId Int
+
+  title     Title   @relation("TitleQualities", fields: [titleId], references: [id], onDelete: Cascade)
+  quality   Quality @relation("QualityTitles", fields: [qualityId], references: [id], onDelete: Cascade)
+
+  @@unique([titleId, qualityId])
+  @@id([titleId, qualityId])
 }
 
 model Season {

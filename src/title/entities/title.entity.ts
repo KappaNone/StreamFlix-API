@@ -3,8 +3,6 @@ import { Title, TitleType } from "@prisma/client";
 
 
 export class TitleEntity implements Title {
-  cons
-
   constructor(partial: Partial<TitleEntity>) {
     Object.assign(this, partial);
   }
@@ -15,7 +13,7 @@ export class TitleEntity implements Title {
   @ApiProperty()
   name: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String, enum: TitleType })
   type: TitleType;
 
   @ApiProperty()

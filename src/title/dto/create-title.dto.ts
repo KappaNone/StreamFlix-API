@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEnum, IsNotEmpty, IsNumber, isNumber, IsString } from "class-validator";
+import { IsEnum, IsNotEmpty, IsNumber, IsString } from "class-validator";
 import { Title, TitleType } from "@prisma/client";
 
 export class CreateTitleDto {
@@ -10,7 +10,7 @@ export class CreateTitleDto {
 
   @IsEnum(TitleType)
   @IsNotEmpty()
-  @ApiProperty()
+  @ApiProperty({ type: String, enum: TitleType })
   type: TitleType;
 
   @IsString()

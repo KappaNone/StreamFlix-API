@@ -1,4 +1,4 @@
-import { PrismaClient, TitleType } from '@prisma/client';
+import { PrismaClient, TitleType, QualityName } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -8,6 +8,8 @@ async function main() {
   await prisma.season.deleteMany({});
   await prisma.title.deleteMany({});
   await prisma.user.deleteMany({});
+  await prisma.titleQuality.deleteMany({});
+  await prisma.quality.deleteMany({});
 
   console.log('Cleared existing data');
 
@@ -67,8 +69,6 @@ async function main() {
     data: {
       titleId: movie1.id,
       episodeNumber: 1,
-      name: 'The Great Movie',
-      description: 'Full movie.',
       durationSeconds: 7200,
       videoUrl: 'https://cdn.example.com/the-great-movie.mp4',
       seasonId: null,
