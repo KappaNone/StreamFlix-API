@@ -54,53 +54,49 @@ export class EpisodeService {
     });
   }
 
-  async findAll(titleId: number, seasonNumber: number | null) {
-    const title = await this.titleService.findOne(titleId);
-
-    if (seasonNumber && title.type === TitleType.SERIES) {
-      const season = await this.seasonService.findOneByNumber(titleId, seasonNumber);
-      if (seasonNumber) {
-        return await this.prisma.episode.findMany({
-          where: { titleId, seasonId: season.id },
-          orderBy: { episodeNumber: 'asc' },
-        });
-      }
-    }
+  async findAll(titleId: number, seasonNumber: number) {
+    const season = await this.seasonService.findOneByNumber(titleId, seasonNumber);
 
     return await this.prisma.episode.findMany({
-      where: { titleId },
+      where: { titleId, seasonId: season.id },
       orderBy: { episodeNumber: 'asc' },
     });
   }
 
-  async findOne(id: number, seasonNumber: number | null, episodeNumber: number | null) {
-    const title = await this.titleService.findOne(id);
+  async findOne(titleId: number, seasonNumber: number | null, episodeNumber: number | null) {
+    const title = await this.titleService.findOne(titleId);
 
     if (seasonNumber) {
-      const season = await this.seasonService.findOneByNumber(id, seasonNumber);
+      const season = await this.seasonService.findOneByNumber(titleId, seasonNumber);
 
       const episode = await this.prisma.episode.findFirst({
-        where: { titleId: id, seasonId: season.id, episodeNumber },
+        where: { titleId, seasonId: season.id, episodeNumber },
       });
 
       if (!episode) {
-        throw new NotFoundException(`Episode number ${episodeNumber} for season ${seasonNumber} of title ${id} not found`);
+        throw new NotFoundException(`Episode number ${episodeNumber} for season ${seasonNumber} of title ${titleId} not found`);
       }
 
       return episode;
     }
 
     if (title.type === TitleType.SERIES) {
-      throw new BadRequestException(`Title ${id} is of type SERIES, must provide season number to find episode`);
+      throw new BadRequestException(`Title ${titleId} is of type SERIES, must provide season number to find episode`);
     }
 
-    return await this.prisma.episode.findFirst({
-      where: { titleId: id },
+    const episode = await this.prisma.episode.findFirst({
+      where: { titleId },
     });
+
+    if (!episode) {
+      throw new NotFoundException(`Episode for title ${titleId} not found`);
+    }
+
+    return episode;
   }
 
-  async update(id: number, seasonNumber: number | null, episodeNumber: number | null,updateEpisodeDto: UpdateEpisodeDto) {
-    const episode = await this.findOne(id, seasonNumber, episodeNumber);
+  async update(titleId: number, seasonNumber: number | null, episodeNumber: number | null, updateEpisodeDto: UpdateEpisodeDto) {
+    const episode = await this.findOne(titleId, seasonNumber, episodeNumber);
 
     return this.prisma.episode.update({
       where: { id: episode.id },
@@ -108,8 +104,8 @@ export class EpisodeService {
     })
   }
 
-  async remove(id: number, seasonNumber: number | null, episodeNumber: number | null) {
-    const episode = await this.findOne(id, seasonNumber, episodeNumber);
+  async remove(titleId: number, seasonNumber: number | null, episodeNumber: number | null) {
+    const episode = await this.findOne(titleId, seasonNumber, episodeNumber);
 
     return this.prisma.episode.delete({ where: { id: episode.id } });
   }
