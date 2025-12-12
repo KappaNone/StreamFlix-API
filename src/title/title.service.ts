@@ -5,32 +5,34 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class TitleService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  create(createTitleDto: CreateTitleDto) {
-    return this.prisma.title.create({
+  async create(createTitleDto: CreateTitleDto) {
+    return await this.prisma.title.create({
       data: createTitleDto,
     });
   }
 
-  findAll() {
-    return this.prisma.title.findMany();
+  async findAll() {
+    return await this.prisma.title.findMany();
   }
 
   async findOne(id: number) {
     const title = await this.prisma.title.findUnique({ where: { id } });
-    if (!title) { throw new NotFoundException(`Title ${id} not found`); }
-    return title
+    if (!title) {
+      throw new NotFoundException(`Title ${id} not found`);
+    }
+    return title;
   }
 
-  update(id: number, updateTitleDto: UpdateTitleDto) {
-    return this.prisma.title.update({
+  async update(id: number, updateTitleDto: UpdateTitleDto) {
+    return await this.prisma.title.update({
       where: { id },
       data: updateTitleDto,
     });
   }
 
-  remove(id: number) {
-    return this.prisma.title.delete({ where: { id } });
+  async remove(id: number) {
+    return await this.prisma.title.delete({ where: { id } });
   }
 }

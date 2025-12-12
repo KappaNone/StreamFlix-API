@@ -7,9 +7,18 @@ import { UsersModule } from './users/users.module';
 import { TitleModule } from './title/title.module';
 import { SeasonModule } from './season/season.module';
 import { EpisodeModule } from './episode/episode.module';
+import { QualityModule } from './quality/quality.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, UsersModule, TitleModule, SeasonModule, EpisodeModule],
+  imports: [
+    PrismaModule,
+    AuthModule,
+    UsersModule,
+    TitleModule,
+    SeasonModule,
+    EpisodeModule,
+    QualityModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

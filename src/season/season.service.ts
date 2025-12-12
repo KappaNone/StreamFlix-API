@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateSeasonDto } from './dto/create-season.dto';
 import { UpdateSeasonDto } from './dto/update-season.dto';
@@ -9,10 +13,14 @@ export class SeasonService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findSeriesTitleOrThrow(titleId: number) {
-    const title = await this.prisma.title.findUnique({ where: { id: titleId } });
+    const title = await this.prisma.title.findUnique({
+      where: { id: titleId },
+    });
     if (!title) throw new NotFoundException(`Title ${titleId} not found`);
     if (title.type !== TitleType.SERIES) {
-      throw new BadRequestException(`Title ${titleId} is of type ${title.type} and has no seasons`);
+      throw new BadRequestException(
+        `Title ${titleId} is of type ${title.type} and has no seasons`,
+      );
     }
   }
 
@@ -29,7 +37,7 @@ export class SeasonService {
 
   async findAllByTitle(titleId: number) {
     await this.findSeriesTitleOrThrow(titleId).then();
-    
+
     return this.prisma.season.findMany({
       where: { titleId },
       orderBy: { seasonNumber: 'asc' },
@@ -43,11 +51,17 @@ export class SeasonService {
       where: { titleId, seasonNumber },
     });
     if (!season)
-      throw new NotFoundException(`Season ${seasonNumber} for title ${titleId} not found`);
+      throw new NotFoundException(
+        `Season ${seasonNumber} for title ${titleId} not found`,
+      );
     return season;
   }
 
-  async updateByNumber(titleId: number, seasonNumber: number, dto: UpdateSeasonDto) {
+  async updateByNumber(
+    titleId: number,
+    seasonNumber: number,
+    dto: UpdateSeasonDto,
+  ) {
     const season = await this.findOneByNumber(titleId, seasonNumber);
     return this.prisma.season.update({
       where: { id: season.id },

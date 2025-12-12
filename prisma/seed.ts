@@ -61,9 +61,9 @@ async function getSeasonDetails(tvId: number, seasonNumber: number): Promise<TMD
   return await fetchFromTMDB(`/tv/${tvId}/season/${seasonNumber}`);
 }
 
-function getRandomQualities(qualityIds: number[]): number[] {
-  const numQualities = Math.floor(Math.random() * 2) + 1; // 1-2 qualities
-  const shuffled = [...qualityIds].sort(() => 0.5 - Math.random());
+function getRandomQualities(): QualityName[] {
+  const numQualities = Math.floor(Math.random() * 3) + 1; // 1-2 qualities
+  const shuffled = Object.values(QualityName).sort(() => 0.5 - Math.random());
   return shuffled.slice(0, numQualities);
 }
 
@@ -73,14 +73,14 @@ async function main() {
   // Clear existing data
   await prisma.episode.deleteMany();
   await prisma.season.deleteMany();
-  await prisma.titleQuality.deleteMany();
+  await prisma.quality.deleteMany();
   await prisma.title.deleteMany();
   await prisma.quality.deleteMany();
   await prisma.user.deleteMany();
 
   // Create Users
   const hashedPassword = await bcrypt.hash('password123', 10);
-  
+
   const users = await prisma.user.createMany({
     data: [
       {
@@ -102,23 +102,6 @@ async function main() {
   });
 
   console.log(`Created ${users.count} users`);
-
-  // Create Qualities
-  const sdQuality = await prisma.quality.create({
-    data: { name: QualityName.SD },
-  });
-
-  const hdQuality = await prisma.quality.create({
-    data: { name: QualityName.HD },
-  });
-
-  const uhdQuality = await prisma.quality.create({
-    data: { name: QualityName.UHD },
-  });
-
-  const qualityIds = [sdQuality.id, hdQuality.id, uhdQuality.id];
-
-  console.log('Created qualities');
 
   // Fetch and create Movies
   console.log('Fetching movies from TMDB...');
@@ -145,8 +128,8 @@ async function main() {
             },
           },
           qualities: {
-            create: getRandomQualities(qualityIds).map((qualityId) => ({
-              qualityId,
+            create: getRandomQualities().map((name) => ({
+              name,
             })),
           },
         },
@@ -170,7 +153,7 @@ async function main() {
     try {
       // Get full TV show details
       const tvDetails = await getTVShowDetails(show.id);
-      
+
       const createdSeries = await prisma.title.create({
         data: {
           name: tvDetails.name,
@@ -178,8 +161,8 @@ async function main() {
           description: tvDetails.overview,
           releaseYear: releaseYear,
           qualities: {
-            create: getRandomQualities(qualityIds).map((qualityId) => ({
-              qualityId,
+            create: getRandomQualities().map((name) => ({
+              name,
             })),
           },
         },
@@ -189,11 +172,11 @@ async function main() {
 
       // Create seasons (limit to first 3 seasons for performance)
       const maxSeasons = Math.min(tvDetails.number_of_seasons, 3);
-      
+
       for (let seasonNum = 1; seasonNum <= maxSeasons; seasonNum++) {
         try {
           const seasonDetails = await getSeasonDetails(show.id, seasonNum);
-          
+
           const season = await prisma.season.create({
             data: {
               titleId: createdSeries.id,
@@ -205,7 +188,7 @@ async function main() {
           if (seasonDetails.episodes && seasonDetails.episodes.length > 0) {
             for (const episode of seasonDetails.episodes) {
               const runtime = episode.runtime || 45; // Default to 45 minutes if not provided
-              
+
               await prisma.episode.create({
                 data: {
                   titleId: createdSeries.id,

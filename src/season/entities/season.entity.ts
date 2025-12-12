@@ -1,5 +1,5 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { Season } from "@prisma/client";
+import { ApiProperty } from '@nestjs/swagger';
+import { Season } from '@prisma/client';
 
 export class SeasonEntity implements Season {
   constructor(partial: Partial<SeasonEntity>) {

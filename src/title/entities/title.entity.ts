@@ -1,6 +1,5 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { Title, TitleType } from "@prisma/client";
-
+import { ApiProperty } from '@nestjs/swagger';
+import { Title, TitleType } from '@prisma/client';
 
 export class TitleEntity implements Title {
   constructor(partial: Partial<TitleEntity>) {

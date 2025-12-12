@@ -1,6 +1,6 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IsEnum, IsNotEmpty, IsNumber, IsString } from "class-validator";
-import { Title, TitleType } from "@prisma/client";
+import { ApiProperty } from '@nestjs/swagger';
+import { IsEnum, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { Title, TitleType } from '@prisma/client';
 
 export class CreateTitleDto {
   @IsString()

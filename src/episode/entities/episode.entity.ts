@@ -1,6 +1,6 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { Episode } from "@prisma/client";
-import { IsOptional } from "class-validator";
+import { ApiProperty } from '@nestjs/swagger';
+import { Episode } from '@prisma/client';
+import { IsOptional } from 'class-validator';
 
 export class EpisodeEntity implements Episode {
   constructor(partial: Partial<EpisodeEntity>) {

@@ -15,10 +15,9 @@ import { ApiTags, ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
 import { SeasonEntity } from './entities/season.entity';
 
 @Controller('title/:titleId/season')
-
 @ApiTags('season')
 export class SeasonController {
-  constructor(private readonly service: SeasonService) { }
+  constructor(private readonly service: SeasonService) {}
 
   @Post()
   @ApiCreatedResponse({ type: SeasonEntity })

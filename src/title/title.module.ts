@@ -4,7 +4,6 @@ import { TitleController } from './title.controller';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { EpisodeModule } from 'src/episode/episode.module';
 
-
 @Module({
   controllers: [TitleController],
   providers: [TitleService],

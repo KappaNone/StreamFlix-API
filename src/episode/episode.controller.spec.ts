@@ -1,5 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { MovieEpisodeController, SeriesEpisodeController } from './episode.controller';
+import {
+  MovieEpisodeController,
+  SeriesEpisodeController,
+} from './episode.controller';
 import { EpisodeService } from './episode.service';
 
 describe('MovieEpisodeController', () => {
