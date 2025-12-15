@@ -14,6 +14,10 @@ model User {
   password  String
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+
+  subscriptions      Subscription[]
+  sentInvitations    Invitation[]      @relation("UserInvitations")
+  invitedSubscriptions Subscription[] @relation("UserInvitesReceived")
 }
 
 model Title {
@@ -48,6 +52,19 @@ enum QualityName {
   UHD
 }
 
+enum SubscriptionStatus {
+  ACTIVE
+  PAUSED
+  CANCELED
+}
+
+enum InvitationStatus {
+  PENDING
+  REDEEMED
+  EXPIRED
+  CANCELED
+}
+
 model Season {
   id            Int       @id @default(autoincrement())
   titleId       Int
@@ -72,4 +89,58 @@ model Episode {
   season          Season?   @relation("SeasonEpisodes", fields: [seasonId], references: [id], onDelete: SetNull)
 
   @@unique([seasonId, episodeNumber])
+}
+
+model SubscriptionPlan {
+  id                Int          @id @default(autoincrement())
+  code              String       @unique
+  name              String
+  priceCents        Int
+  currency          String       @default("EUR")
+  maxQuality        QualityName
+  concurrentStreams Int          @default(1)
+  trialDays         Int          @default(30)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  subscriptions     Subscription[]
+}
+
+model Subscription {
+  id                 Int                @id @default(autoincrement())
+  userId             Int
+  planId             Int
+  status             SubscriptionStatus @default(ACTIVE)
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  trialEndsAt        DateTime?
+  autoRenew          Boolean            @default(true)
+  discountPercent    Int                @default(0)
+  discountEndsAt     DateTime?
+  invitedByUserId    Int?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan               SubscriptionPlan   @relation(fields: [planId], references: [id])
+  invitation         Invitation?        @relation("InvitationRedemption")
+  invitedByUser      User?              @relation("UserInvitesReceived", fields: [invitedByUserId], references: [id])
+}
+
+model Invitation {
+  id                   Int               @id @default(autoincrement())
+  code                 String            @unique
+  inviterId            Int
+  inviteeEmail         String
+  status               InvitationStatus  @default(PENDING)
+  discountPercent      Int               @default(25)
+  discountDurationDays Int               @default(30)
+  expiresAt            DateTime
+  redeemedAt           DateTime?
+  subscriptionId       Int?              @unique
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  inviter              User              @relation("UserInvitations", fields: [inviterId], references: [id], onDelete: Cascade)
+  subscription         Subscription?     @relation("InvitationRedemption", fields: [subscriptionId], references: [id])
 }

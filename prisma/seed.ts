@@ -1,4 +1,8 @@
-import { PrismaClient, TitleType, QualityName } from '@prisma/client';
+import {
+  PrismaClient,
+  TitleType,
+  QualityName,
+} from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
@@ -7,6 +11,36 @@ const prisma = new PrismaClient();
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const HAS_TMDB_KEY = Boolean(TMDB_API_KEY);
+
+const SUBSCRIPTION_PLANS = [
+  {
+    code: 'basic_sd',
+    name: 'Basic SD',
+    priceCents: 799,
+    currency: 'EUR',
+    maxQuality: QualityName.SD,
+    concurrentStreams: 1,
+    trialDays: 30,
+  },
+  {
+    code: 'standard_hd',
+    name: 'Standard HD',
+    priceCents: 1199,
+    currency: 'EUR',
+    maxQuality: QualityName.HD,
+    concurrentStreams: 2,
+    trialDays: 30,
+  },
+  {
+    code: 'premium_uhd',
+    name: 'Premium UHD',
+    priceCents: 1599,
+    currency: 'EUR',
+    maxQuality: QualityName.UHD,
+    concurrentStreams: 4,
+    trialDays: 30,
+  },
+];
 
 interface TMDBMovie {
   id: number;
@@ -66,6 +100,40 @@ function getRandomQualities(): QualityName[] {
   const numQualities = Math.floor(Math.random() * 3) + 1; // 1-2 qualities
   const shuffled = Object.values(QualityName).sort(() => 0.5 - Math.random());
   return shuffled.slice(0, numQualities);
+}
+
+function addDays(base: Date, days: number) {
+  const copy = new Date(base);
+  copy.setDate(copy.getDate() + days);
+  return copy;
+}
+
+async function seedSubscriptionPlans() {
+  for (const plan of SUBSCRIPTION_PLANS) {
+    await prisma.subscriptionPlan.upsert({
+      where: { code: plan.code },
+      update: plan,
+      create: plan,
+    });
+  }
+
+  console.log(`Seeded ${SUBSCRIPTION_PLANS.length} subscription plans.`);
+}
+
+async function seedDemoInvitations(inviterEmail: string) {
+  const inviter = await prisma.user.findUnique({ where: { email: inviterEmail } });
+  if (!inviter) return;
+
+  await prisma.invitation.create({
+    data: {
+      code: 'FRIENDPASS',
+      inviterId: inviter.id,
+      inviteeEmail: 'friend@example.com',
+      expiresAt: addDays(new Date(), 30),
+    },
+  });
+
+  console.log('Demo invitation created for friend@example.com');
 }
 
 async function seedFallbackContent() {
@@ -283,12 +351,17 @@ async function main() {
   console.log('Starting seed process...');
 
   // Clear existing data
+  await prisma.invitation.deleteMany();
+  await prisma.subscription.deleteMany();
+  await prisma.subscriptionPlan.deleteMany();
   await prisma.episode.deleteMany();
   await prisma.season.deleteMany();
   await prisma.quality.deleteMany();
   await prisma.title.deleteMany();
   await prisma.quality.deleteMany();
   await prisma.user.deleteMany();
+
+  await seedSubscriptionPlans();
 
   // Create Users
   const hashedPassword = await bcrypt.hash('password123', 10);
@@ -314,6 +387,8 @@ async function main() {
   });
 
   console.log(`Created ${users.count} users`);
+
+  await seedDemoInvitations('john@example.com');
 
   if (HAS_TMDB_KEY) {
     try {
