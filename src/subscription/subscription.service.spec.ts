@@ -20,6 +20,7 @@ describe('SubscriptionService', () => {
   });
 
   it('should be defined', () => {
+    // Verifies the service resolves with the mocked Prisma dependency.
     expect(service).toBeDefined();
   });
 });

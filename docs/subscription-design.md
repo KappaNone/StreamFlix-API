@@ -5,8 +5,8 @@ _Last updated: 2025-12-15_
 ## Goals
 
 - Offer StreamFlix customers the choice between SD, HD, and UHD subscription tiers with realistic euro pricing.
-- Provide a 30-day free trial for first-time subscribers.
-- Allow existing customers to invite friends with a one-month 25% discount on the invitee's first paid month and the inviter earning an extra 7 days of service.
+- Provide a seven-day free trial for first-time subscribers.
+- Allow existing customers to invite friends where both inviter and invitee receive the same temporary discount on a paid month.
 - Keep the solution fully in TypeScript (NestJS + Prisma) and make sure it is testable and well documented.
 
 ## Data Model Summary
@@ -16,6 +16,8 @@ _Last updated: 2025-12-15_
 | `SubscriptionPlan` | Canonical definition of plans (seeded) | `code`, `name`, `priceCents`, `currency`, `maxQuality`, `concurrentStreams`, `trialDays` |
 | `Subscription` | User's current subscription state | `userId`, `planId`, `status`, `currentPeriodStart`, `currentPeriodEnd`, `trialEndsAt`, `autoRenew`, `discountPercent`, `discountEndsAt`, `invitationId`, `invitedByUserId` |
 | `Invitation` | Invite codes and redemption tracking | `code`, `inviterId`, `inviteeEmail`, `status`, `discountPercent`, `discountDurationDays`, `expiresAt`, `redeemedAt`, `subscriptionId` |
+
+`User` now includes a `referralDiscountUsed` boolean to enforce the "discount only once" constraint per account.
 
 Supporting enums:
 
@@ -36,15 +38,16 @@ Relations
    - HD: `code="standard_hd"`, €11.99, `maxQuality=HD`, `concurrentStreams=2`.
    - UHD: `code="premium_uhd"`, €15.99, `maxQuality=UHD`, `concurrentStreams=4`.
 2. **Trial**
-   - First subscription per user receives 30 trial days (configurable per plan via `trialDays`).
+   - First subscription per user receives 7 trial days (configurable per plan via `trialDays`).
    - Trial end date stored in `Subscription.trialEndsAt`.
    - Billing cycle (`currentPeriodStart` → `currentPeriodEnd`) begins at trial end.
 3. **Invitations**
    - Inviter can create an invitation by email; system issues a random 10-character code.
    - Invitation expires after 30 days unless redeemed.
-   - When invitee redeems the code while creating a subscription, they get 25% discount (`discountPercent`) for `discountDurationDays = 30`.
-   - Inviter earns an extra 7 days appended to their `currentPeriodEnd` (if active) or credited via metadata (future enhancement).
-4. **Subscription lifecycle**
+   - When invitee redeems the code while creating a subscription, they get a 25% discount (`discountPercent`) for `discountDurationDays = 30` and the inviter's active subscription receives the same discount window.
+4. **Referral Guardrails**
+   - Each account (inviter or invitee) may receive the referral discount once. The `referralDiscountUsed` flag is flipped during redemption to block future attempts.
+5. **Subscription lifecycle**
    - Exactly one `ACTIVE` subscription per user enforced.
    - `PATCH /subscriptions/:id` supports plan changes (prorate by resetting `currentPeriodStart` and `currentPeriodEnd`).
    - Cancellation sets status to `CANCELED` and stops auto-renew at the end of the period.

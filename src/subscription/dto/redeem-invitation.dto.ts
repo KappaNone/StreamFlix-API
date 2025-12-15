@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsInt, IsString, Min } from 'class-validator';
 
+// Payload for checking an invitation before applying it.
 export class RedeemInvitationDto {
   @ApiProperty()
   @IsString()

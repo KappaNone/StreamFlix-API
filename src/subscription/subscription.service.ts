@@ -46,6 +46,7 @@ export class SubscriptionService {
   }
 
   async createOrUpdateSubscription(dto: CreateSubscriptionDto) {
+    // Handles first-time signups and plan switches, layering trials and referral discounts as needed.
     const { userId, planCode, invitationCode } = dto;
     const now = new Date();
 
@@ -259,6 +260,7 @@ export class SubscriptionService {
   }
 
   private async applyInviterDiscount(inviterId: number, invitation: Invitation) {
+    // Mirrors the invitee's discount on the inviter exactly once.
     const inviter = await this.prisma.user.findUnique({ where: { id: inviterId } });
 
     if (!inviter || inviter.referralDiscountUsed) {
@@ -301,6 +303,7 @@ export class SubscriptionService {
     code: string,
     user: Pick<User, 'id' | 'email' | 'referralDiscountUsed'>,
   ) {
+    // Validates an invitation code and enforces the one-time referral policy per account.
     if (user.referralDiscountUsed) {
       throw new BadRequestException('Referral discount already used by this account');
     }

@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsInt, IsOptional, IsString, Min } from 'class-validator';
 
+// Payload used when creating or swapping a subscription.
 export class CreateSubscriptionDto {
   @ApiProperty()
   @IsInt()

@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Invitation, InvitationStatus } from '@prisma/client';
 
+// Response wrapper for referral invitations.
 export class InvitationEntity implements Invitation {
   constructor(partial: Partial<InvitationEntity>) {
     Object.assign(this, partial);

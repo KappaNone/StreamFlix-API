@@ -2,6 +2,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { SubscriptionStatus } from '@prisma/client';
 import { IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator';
 
+// Supports plan switches, cancelation flags, and auto-renew updates.
 export class UpdateSubscriptionDto {
   @ApiPropertyOptional({ description: 'Switch to another subscription plan by code' })
   @IsOptional()

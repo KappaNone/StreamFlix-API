@@ -8,4 +8,5 @@ import { PrismaModule } from 'src/prisma/prisma.module';
   controllers: [SubscriptionController],
   providers: [SubscriptionService],
 })
+// Wires Prisma into the subscription endpoints so they can be imported as a feature module.
 export class SubscriptionModule {}

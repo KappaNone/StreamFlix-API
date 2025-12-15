@@ -19,17 +19,20 @@ import { RedeemInvitationDto } from './dto/redeem-invitation.dto';
 
 @Controller('subscriptions')
 @ApiTags('subscriptions')
+// HTTP surface for listing plans, managing subscriptions, and handling referrals.
 export class SubscriptionController {
   constructor(private readonly subscriptionService: SubscriptionService) {}
 
   @Get('plans')
   @ApiOkResponse({ type: SubscriptionPlanEntity, isArray: true })
+  // Returns the catalog so clients can show pricing tiers.
   listPlans() {
     return this.subscriptionService.listPlans();
   }
 
   @Post()
   @ApiCreatedResponse({ type: SubscriptionEntity })
+  // Creates a subscription or swaps the user's plan while applying trials/referrals.
   async create(@Body() dto: CreateSubscriptionDto) {
     const subscription = await this.subscriptionService.createOrUpdateSubscription(dto);
     return new SubscriptionEntity(subscription);
@@ -37,6 +40,7 @@ export class SubscriptionController {
 
   @Get(':id')
   @ApiOkResponse({ type: SubscriptionEntity })
+  // Fetches a single subscription with its plan + invitation metadata.
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const subscription = await this.subscriptionService.findOne(id);
     return new SubscriptionEntity(subscription);
@@ -44,6 +48,7 @@ export class SubscriptionController {
 
   @Patch(':id')
   @ApiOkResponse({ type: SubscriptionEntity })
+  // Lets the client toggle auto-renew, switch plans, or cancel.
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateSubscriptionDto,
@@ -54,6 +59,7 @@ export class SubscriptionController {
 
   @Post('invitations')
   @ApiCreatedResponse({ type: InvitationEntity })
+  // Issues a referral link for an existing customer.
   async createInvitation(@Body() dto: CreateInvitationDto) {
     const invitation = await this.subscriptionService.createInvitation(dto);
     return new InvitationEntity(invitation);
@@ -61,6 +67,7 @@ export class SubscriptionController {
 
   @Post('invitations/redeem')
   @ApiOkResponse({ type: InvitationEntity })
+  // Validates an invite before the invitee attempts to subscribe.
   async redeemInvitation(@Body() dto: RedeemInvitationDto) {
     const invitation = await this.subscriptionService.redeemInvitation(dto);
     return new InvitationEntity(invitation);

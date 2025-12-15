@@ -24,6 +24,11 @@ If you use Docker, you can start the stack with:
 npm run docker
 ```
 
+### Developer Tooling
+
+- Swagger UI: http://localhost:4000/docs (proxied from the Nest app running on port 3000).
+- Prisma Studio: http://localhost:5555 when `npm run docker` (or `npm run studio`) is active.
+
 ## Prisma & Database
 
 - `npx prisma generate` whenever `prisma/schema.prisma` changes.
@@ -42,8 +47,8 @@ npm run docker
 
 ### Trials & Discounts
 
-- First subscription per user automatically gets a 30-day trial (configurable per plan).
-- Invitations provide a 25% discount on the invitee's first paid month and extend the inviter's active subscription by 7 days.
+- First subscription per user automatically gets a 7-day trial (pulls from each plan's `trialDays`).
+- Invitation codes grant the same temporary discount to both invitee and inviter for `discountDurationDays`, and every account can only redeem a referral discount once.
 
 ## Testing & Linting
 

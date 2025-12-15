@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEmail, IsInt, IsOptional, IsPositive, IsString, Max, Min } from 'class-validator';
 
+// Request body for issuing referral links.
 export class CreateInvitationDto {
   @ApiProperty()
   @IsInt()

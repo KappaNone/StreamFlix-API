@@ -20,6 +20,7 @@ describe('SubscriptionController', () => {
   });
 
   it('should be defined', () => {
+    // Smoke test to ensure the controller wires up with its mocked dependencies.
     expect(controller).toBeDefined();
   });
 });

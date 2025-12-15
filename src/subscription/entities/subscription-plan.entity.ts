@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { QualityName, SubscriptionPlan } from '@prisma/client';
 
+// Serializes plan metadata for the plan catalog endpoint.
 export class SubscriptionPlanEntity implements SubscriptionPlan {
   constructor(partial: Partial<SubscriptionPlanEntity>) {
     Object.assign(this, partial);
