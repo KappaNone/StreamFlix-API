@@ -5,9 +5,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import {
+  Invitation,
   InvitationStatus,
   Prisma,
   SubscriptionStatus,
+  User,
 } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
@@ -88,7 +90,11 @@ export class SubscriptionService {
     const periodEnd = this.addDays(periodStart, 30);
 
     const invitation = invitationCode
-      ? await this.ensureInvitation(invitationCode, user.email)
+      ? await this.ensureInvitation(invitationCode, {
+          id: user.id,
+          email: user.email,
+          referralDiscountUsed: user.referralDiscountUsed,
+        })
       : null;
 
     const discountPercent = invitation
@@ -132,15 +138,22 @@ export class SubscriptionService {
     }
 
     if (invitation) {
-      await this.prisma.invitation.update({
-        where: { id: invitation.id },
-        data: {
-          status: InvitationStatus.REDEEMED,
-          redeemedAt: now,
-          subscription: { connect: { id: subscription.id } },
-        },
-      });
-      await this.extendInviterSubscription(invitation.inviterId);
+      await this.prisma.$transaction([
+        this.prisma.invitation.update({
+          where: { id: invitation.id },
+          data: {
+            status: InvitationStatus.REDEEMED,
+            redeemedAt: now,
+            subscription: { connect: { id: subscription.id } },
+          },
+        }),
+        this.prisma.user.update({
+          where: { id: user.id },
+          data: { referralDiscountUsed: true },
+        }),
+      ]);
+
+      await this.applyInviterDiscount(invitation.inviterId, invitation);
     }
 
     return subscription;
@@ -238,10 +251,20 @@ export class SubscriptionService {
       throw new NotFoundException(`User ${dto.userId} not found`);
     }
 
-    return this.ensureInvitation(dto.code, user.email);
+    return this.ensureInvitation(dto.code, {
+      id: user.id,
+      email: user.email,
+      referralDiscountUsed: user.referralDiscountUsed,
+    });
   }
 
-  private async extendInviterSubscription(inviterId: number) {
+  private async applyInviterDiscount(inviterId: number, invitation: Invitation) {
+    const inviter = await this.prisma.user.findUnique({ where: { id: inviterId } });
+
+    if (!inviter || inviter.referralDiscountUsed) {
+      return;
+    }
+
     const inviterSubscription = await this.prisma.subscription.findFirst({
       where: {
         userId: inviterId,
@@ -251,18 +274,37 @@ export class SubscriptionService {
     });
 
     if (!inviterSubscription) {
+      await this.prisma.user.update({
+        where: { id: inviterId },
+        data: { referralDiscountUsed: true },
+      });
       return;
     }
 
-    await this.prisma.subscription.update({
-      where: { id: inviterSubscription.id },
-      data: {
-        currentPeriodEnd: this.addDays(inviterSubscription.currentPeriodEnd, 7),
-      },
-    });
+    const now = new Date();
+    await this.prisma.$transaction([
+      this.prisma.subscription.update({
+        where: { id: inviterSubscription.id },
+        data: {
+          discountPercent: invitation.discountPercent,
+          discountEndsAt: this.addDays(now, invitation.discountDurationDays),
+        },
+      }),
+      this.prisma.user.update({
+        where: { id: inviterId },
+        data: { referralDiscountUsed: true },
+      }),
+    ]);
   }
 
-  private async ensureInvitation(code: string, userEmail: string) {
+  private async ensureInvitation(
+    code: string,
+    user: Pick<User, 'id' | 'email' | 'referralDiscountUsed'>,
+  ) {
+    if (user.referralDiscountUsed) {
+      throw new BadRequestException('Referral discount already used by this account');
+    }
+
     const invitation = await this.prisma.invitation.findUnique({ where: { code } });
 
     if (!invitation) {
@@ -282,7 +324,7 @@ export class SubscriptionService {
       throw new BadRequestException('Invitation expired');
     }
 
-    if (invitation.inviteeEmail.toLowerCase() !== userEmail.toLowerCase()) {
+    if (invitation.inviteeEmail.toLowerCase() !== user.email.toLowerCase()) {
       throw new BadRequestException('Invitation email mismatch');
     }
 

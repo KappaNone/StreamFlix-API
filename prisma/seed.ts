@@ -20,7 +20,7 @@ const SUBSCRIPTION_PLANS = [
     currency: 'EUR',
     maxQuality: QualityName.SD,
     concurrentStreams: 1,
-    trialDays: 30,
+    trialDays: 7,
   },
   {
     code: 'standard_hd',
@@ -29,7 +29,7 @@ const SUBSCRIPTION_PLANS = [
     currency: 'EUR',
     maxQuality: QualityName.HD,
     concurrentStreams: 2,
-    trialDays: 30,
+    trialDays: 7,
   },
   {
     code: 'premium_uhd',
@@ -38,7 +38,7 @@ const SUBSCRIPTION_PLANS = [
     currency: 'EUR',
     maxQuality: QualityName.UHD,
     concurrentStreams: 4,
-    trialDays: 30,
+    trialDays: 7,
   },
 ];
 
