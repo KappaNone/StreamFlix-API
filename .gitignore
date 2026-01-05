@@ -2,8 +2,30 @@
 /dist
 /node_modules
 
-# environment variables
+# environment variables / secrets
 .env
+.env.*
+.env.local
+.env.prod
+.env.development*
+.env.production*
+.env.test*
+*.env
+!*.env.example
+.secrets/
+secrets/
+*.secret
+*.enc
+.npmrc
+.yarnrc
+*.pem
+*.key
+*.crt
+*.pfx
+*.p12
+*.cer
+*.der
+*.csr
 
 # Logs
 logs

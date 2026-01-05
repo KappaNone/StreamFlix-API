@@ -8,6 +8,7 @@ import { TitleModule } from './title/title.module';
 import { SeasonModule } from './season/season.module';
 import { EpisodeModule } from './episode/episode.module';
 import { QualityModule } from './quality/quality.module';
+import { SubscriptionModule } from './subscription/subscription.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { QualityModule } from './quality/quality.module';
     SeasonModule,
     EpisodeModule,
     QualityModule,
+    SubscriptionModule,
   ],
   controllers: [AppController],
   providers: [AppService],

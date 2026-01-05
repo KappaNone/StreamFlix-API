@@ -23,7 +23,7 @@ services:
       context: .  
       dockerfile: Dockerfile
     ports:
-      - '3000:3000'
+      - '4000:3000'
     stdin_open: true
     tty: true  # Keeps the container running for debugging
     depends_on:
@@ -35,11 +35,10 @@ services:
       - prisma-network
       
   prisma-studio:
-    image: node:lts-alpine3.17
-    working_dir: /usr/src/app
-    volumes:
-      - .:/usr/src/app
-    command: npx prisma studio --port 5555 --browser none
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: sh -c "npx prisma studio --port 5555 --hostname 0.0.0.0 --browser none"
     ports:
       - "5555:5555"
     env_file:

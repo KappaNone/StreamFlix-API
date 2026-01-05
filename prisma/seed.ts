@@ -1,4 +1,8 @@
-import { PrismaClient, TitleType, QualityName } from '@prisma/client';
+import {
+  PrismaClient,
+  TitleType,
+  QualityName,
+} from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
@@ -6,6 +10,37 @@ const prisma = new PrismaClient();
 // TMDB API Configuration
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
+const HAS_TMDB_KEY = Boolean(TMDB_API_KEY);
+
+const SUBSCRIPTION_PLANS = [
+  {
+    code: 'basic_sd',
+    name: 'Basic SD',
+    priceCents: 799,
+    currency: 'EUR',
+    maxQuality: QualityName.SD,
+    concurrentStreams: 1,
+    trialDays: 7,
+  },
+  {
+    code: 'standard_hd',
+    name: 'Standard HD',
+    priceCents: 1199,
+    currency: 'EUR',
+    maxQuality: QualityName.HD,
+    concurrentStreams: 2,
+    trialDays: 7,
+  },
+  {
+    code: 'premium_uhd',
+    name: 'Premium UHD',
+    priceCents: 1599,
+    currency: 'EUR',
+    maxQuality: QualityName.UHD,
+    concurrentStreams: 4,
+    trialDays: 7,
+  },
+];
 
 interface TMDBMovie {
   id: number;
@@ -67,43 +102,120 @@ function getRandomQualities(): QualityName[] {
   return shuffled.slice(0, numQualities);
 }
 
-async function main() {
-  console.log('Starting seed with TMDB API data...');
+function addDays(base: Date, days: number) {
+  const copy = new Date(base);
+  copy.setDate(copy.getDate() + days);
+  return copy;
+}
 
-  // Clear existing data
-  await prisma.episode.deleteMany();
-  await prisma.season.deleteMany();
-  await prisma.quality.deleteMany();
-  await prisma.title.deleteMany();
-  await prisma.quality.deleteMany();
-  await prisma.user.deleteMany();
+async function seedSubscriptionPlans() {
+  for (const plan of SUBSCRIPTION_PLANS) {
+    await prisma.subscriptionPlan.upsert({
+      where: { code: plan.code },
+      update: plan,
+      create: plan,
+    });
+  }
 
-  // Create Users
-  const hashedPassword = await bcrypt.hash('password123', 10);
+  console.log(`Seeded ${SUBSCRIPTION_PLANS.length} subscription plans.`);
+}
 
-  const users = await prisma.user.createMany({
-    data: [
-      {
-        name: 'John Doe',
-        email: 'john@example.com',
-        password: hashedPassword,
-      },
-      {
-        name: 'Jane Smith',
-        email: 'jane@example.com',
-        password: hashedPassword,
-      },
-      {
-        name: 'Bob Johnson',
-        email: 'bob@example.com',
-        password: hashedPassword,
-      },
-    ],
+async function seedDemoInvitations(inviterEmail: string) {
+  const inviter = await prisma.user.findUnique({ where: { email: inviterEmail } });
+  if (!inviter) return;
+
+  await prisma.invitation.create({
+    data: {
+      code: 'FRIENDPASS',
+      inviterId: inviter.id,
+      inviteeEmail: 'friend@example.com',
+      expiresAt: addDays(new Date(), 30),
+    },
   });
 
-  console.log(`Created ${users.count} users`);
+  console.log('Demo invitation created for friend@example.com');
+}
 
-  // Fetch and create Movies
+async function seedFallbackContent() {
+  console.warn('Seeding fallback demo content (TMDB API key missing or invalid).');
+
+  const demoTitles = [
+    {
+      name: 'StreamFlix Originals: The Rise',
+      type: TitleType.MOVIE,
+      description: 'A thriller about a startup that takes over the streaming world.',
+      releaseYear: 2024,
+      durationSeconds: 7200,
+  qualities: [QualityName.HD, QualityName.UHD],
+    },
+    {
+      name: 'StreamFlix Originals: The Series',
+      type: TitleType.SERIES,
+      description: 'A mini-series following a team of developers shipping a hit platform.',
+      releaseYear: 2025,
+      qualities: [QualityName.SD, QualityName.HD],
+      seasons: [
+        {
+          seasonNumber: 1,
+          episodeCount: 3,
+        },
+      ],
+    },
+  ];
+
+  for (const title of demoTitles) {
+    const created = await prisma.title.create({
+      data: {
+        name: title.name,
+        type: title.type,
+        description: title.description,
+        releaseYear: title.releaseYear,
+        qualities: {
+          create: (title.qualities ?? [QualityName.HD]).map((name) => ({ name })),
+        },
+        episodes:
+          title.type === TitleType.MOVIE
+            ? {
+                create: {
+                  episodeNumber: 1,
+                  durationSeconds: title.durationSeconds ?? 5400,
+                  videoUrl: 'https://cdn.example.com/demo/movie.mp4',
+                },
+              }
+            : undefined,
+      },
+    });
+
+    if (title.type === TitleType.SERIES && title.seasons) {
+      for (const seasonDef of title.seasons) {
+        const season = await prisma.season.create({
+          data: {
+            titleId: created.id,
+            seasonNumber: seasonDef.seasonNumber,
+          },
+        });
+
+        for (let episode = 1; episode <= (seasonDef.episodeCount ?? 4); episode++) {
+          await prisma.episode.create({
+            data: {
+              titleId: created.id,
+              seasonId: season.id,
+              episodeNumber: episode,
+              name: `Episode ${episode}`,
+              description: `Season ${seasonDef.seasonNumber}, Episode ${episode}`,
+              durationSeconds: 2700,
+              videoUrl: `https://cdn.example.com/demo/series/s${seasonDef.seasonNumber}/e${episode}.mp4`,
+            },
+          });
+        }
+      }
+    }
+  }
+
+  console.log('Fallback content seeded.');
+}
+
+async function seedTmdbContent() {
   console.log('Fetching movies from TMDB...');
   const tmdbMovies = await getPopularMovies(15);
 
@@ -224,7 +336,7 @@ async function main() {
           }
 
           // Add delay to avoid rate limiting
-          await new Promise(resolve => setTimeout(resolve, 250));
+          await new Promise((resolve) => setTimeout(resolve, 250));
         } catch (error) {
           console.error(`  Error creating season ${seasonNum}:`, error);
         }
@@ -232,6 +344,62 @@ async function main() {
     } catch (error) {
       console.error(`Error creating series ${show.name}:`, error);
     }
+  }
+}
+
+async function main() {
+  console.log('Starting seed process...');
+
+  // Clear existing data
+  await prisma.invitation.deleteMany();
+  await prisma.subscription.deleteMany();
+  await prisma.subscriptionPlan.deleteMany();
+  await prisma.episode.deleteMany();
+  await prisma.season.deleteMany();
+  await prisma.quality.deleteMany();
+  await prisma.title.deleteMany();
+  await prisma.quality.deleteMany();
+  await prisma.user.deleteMany();
+
+  await seedSubscriptionPlans();
+
+  // Create Users
+  const hashedPassword = await bcrypt.hash('password123', 10);
+
+  const users = await prisma.user.createMany({
+    data: [
+      {
+        name: 'John Doe',
+        email: 'john@example.com',
+        password: hashedPassword,
+      },
+      {
+        name: 'Jane Smith',
+        email: 'jane@example.com',
+        password: hashedPassword,
+      },
+      {
+        name: 'Bob Johnson',
+        email: 'bob@example.com',
+        password: hashedPassword,
+      },
+    ],
+  });
+
+  console.log(`Created ${users.count} users`);
+
+  await seedDemoInvitations('john@example.com');
+
+  if (HAS_TMDB_KEY) {
+    try {
+      await seedTmdbContent();
+    } catch (error) {
+      console.error('TMDB seeding failed, using fallback content instead.', error);
+      await seedFallbackContent();
+    }
+  } else {
+    console.warn('TMDB_API_KEY is not set. Falling back to local demo data.');
+    await seedFallbackContent();
   }
 
   console.log('Seed completed successfully!');
