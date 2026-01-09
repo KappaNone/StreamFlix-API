@@ -9,6 +9,9 @@ import { SeasonModule } from './season/season.module';
 import { EpisodeModule } from './episode/episode.module';
 import { QualityModule } from './quality/quality.module';
 import { SubscriptionModule } from './subscription/subscription.module';
+import { ProfileModule } from './profile/profile.module';
+import { ProfilePreferenceModule } from './profile-preferences/profile-preference.module';
+import { GenreModule } from './genre/genre.module';
 
 @Module({
   imports: [
@@ -20,6 +23,9 @@ import { SubscriptionModule } from './subscription/subscription.module';
     EpisodeModule,
     QualityModule,
     SubscriptionModule,
+    ProfileModule,
+    ProfilePreferenceModule,
+    GenreModule,
   ],
   controllers: [AppController],
   providers: [AppService],
