@@ -347,10 +347,108 @@ async function seedTmdbContent() {
   }
 }
 
+async function seedViewingData(users: any[], titles: any[]) {
+  if (users.length === 0 || titles.length === 0) return;
+
+  const user1 = await prisma.user.findUnique({ where: { email: 'john@example.com' } });
+  const user2 = await prisma.user.findUnique({ where: { email: 'jane@example.com' } });
+
+  if (!user1 || !user2) return;
+
+  // Get some titles and episodes for seeding
+  const moviesAndSeries = await prisma.title.findMany({
+    take: Math.min(10, titles.length),
+    include: {
+      episodes: {
+        include: { season: true },
+      },
+    },
+  });
+
+  if (moviesAndSeries.length === 0) return;
+
+  // Add titles to watchlist
+  for (let i = 0; i < Math.min(3, moviesAndSeries.length); i++) {
+    await prisma.watchlist.create({
+      data: {
+        userId: user1.id,
+        titleId: moviesAndSeries[i].id,
+      },
+    });
+
+    await prisma.watchlist.create({
+      data: {
+        userId: user2.id,
+        titleId: moviesAndSeries[i].id,
+      },
+    });
+  }
+
+  // Create viewing progress for user1 - partial watching
+  for (let i = 0; i < Math.min(2, moviesAndSeries.length); i++) {
+    const title = moviesAndSeries[i];
+    const episode = title.episodes[0];
+
+    if (episode) {
+      await prisma.viewingProgress.create({
+        data: {
+          userId: user1.id,
+          titleId: title.id,
+          episodeId: episode.id,
+          positionSeconds: Math.floor(episode.durationSeconds * 0.5), // 50% watched
+          totalDurationSeconds: episode.durationSeconds,
+          isCompleted: false,
+          autoPlayNextEpisode: true,
+          lastViewedAt: new Date(Date.now() - 3600000), // 1 hour ago
+        },
+      });
+    }
+  }
+
+  // Create viewing progress for user2 - completed watching
+  for (let i = 0; i < Math.min(3, moviesAndSeries.length); i++) {
+    const title = moviesAndSeries[i];
+    const episode = title.episodes[0];
+
+    if (episode) {
+      const completedDate = new Date(Date.now() - Math.random() * 604800000); // Random time within last week
+
+      await prisma.viewingProgress.create({
+        data: {
+          userId: user2.id,
+          titleId: title.id,
+          episodeId: episode.id,
+          positionSeconds: episode.durationSeconds,
+          totalDurationSeconds: episode.durationSeconds,
+          isCompleted: true,
+          autoPlayNextEpisode: true,
+          lastViewedAt: completedDate,
+          completedAt: completedDate,
+        },
+      });
+
+      // Remove completed title from watchlist
+      await prisma.watchlist.updateMany({
+        where: {
+          userId: user2.id,
+          titleId: title.id,
+        },
+        data: {
+          removedAt: completedDate,
+        },
+      });
+    }
+  }
+
+  console.log('Viewing data seeded successfully!');
+}
+
 async function main() {
   console.log('Starting seed process...');
 
   // Clear existing data
+  await prisma.watchlist.deleteMany();
+  await prisma.viewingProgress.deleteMany();
   await prisma.invitation.deleteMany();
   await prisma.subscription.deleteMany();
   await prisma.subscriptionPlan.deleteMany();
@@ -401,6 +499,11 @@ async function main() {
     console.warn('TMDB_API_KEY is not set. Falling back to local demo data.');
     await seedFallbackContent();
   }
+
+  // Seed viewing data
+  const allUsers = await prisma.user.findMany();
+  const allTitles = await prisma.title.findMany();
+  await seedViewingData(allUsers, allTitles);
 
   console.log('Seed completed successfully!');
 }

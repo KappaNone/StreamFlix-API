@@ -16,9 +16,11 @@ model User {
   updatedAt DateTime  @updatedAt
   referralDiscountUsed Boolean @default(false)
 
-  subscriptions      Subscription[]
-  sentInvitations    Invitation[]      @relation("UserInvitations")
-  invitedSubscriptions Subscription[] @relation("UserInvitesReceived")
+  subscriptions        Subscription[]
+  sentInvitations      Invitation[]      @relation("UserInvitations")
+  invitedSubscriptions Subscription[]    @relation("UserInvitesReceived")
+  viewingProgress      ViewingProgress[] @relation("UserViewingProgress")
+  watchlist            Watchlist[]       @relation("UserWatchlist")
 }
 
 model Title {
@@ -28,9 +30,11 @@ model Title {
   description     String
   releaseYear     Int
 
-  episodes        Episode[] @relation("TitleEpisodes")
-  seasons         Season[]  @relation("TitleSeasons")
-  qualities       Quality[] @relation("TitleQualities")
+  episodes            Episode[] @relation("TitleEpisodes")
+  seasons             Season[]  @relation("TitleSeasons")
+  qualities           Quality[] @relation("TitleQualities")
+  viewingProgress     ViewingProgress[] @relation("TitleViewingProgress")
+  watchlist           Watchlist[] @relation("TitleWatchlist")
 }
 
 enum TitleType {
@@ -88,6 +92,7 @@ model Episode {
   // Relations
   title           Title     @relation("TitleEpisodes", fields: [titleId], references: [id], onDelete: Cascade)
   season          Season?   @relation("SeasonEpisodes", fields: [seasonId], references: [id], onDelete: SetNull)
+  viewingProgress ViewingProgress[] @relation("EpisodeViewingProgress")
 
   @@unique([seasonId, episodeNumber])
 }
@@ -144,4 +149,38 @@ model Invitation {
 
   inviter              User              @relation("UserInvitations", fields: [inviterId], references: [id], onDelete: Cascade)
   subscription         Subscription?     @relation("InvitationRedemption", fields: [subscriptionId], references: [id])
+}
+
+model ViewingProgress {
+  id                 Int       @id @default(autoincrement())
+  userId             Int
+  titleId            Int
+  episodeId          Int?      // For series tracking which episode
+  positionSeconds    Int       @default(0)  // Last known position
+  totalDurationSeconds Int
+  isCompleted        Boolean   @default(false)  // Whether watched in entirety
+  autoPlayNextEpisode Boolean @default(true)   // For series, auto-continue to next
+  lastViewedAt       DateTime
+  completedAt        DateTime? // When finished watching
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  user               User      @relation("UserViewingProgress", fields: [userId], references: [id], onDelete: Cascade)
+  title              Title     @relation("TitleViewingProgress", fields: [titleId], references: [id], onDelete: Cascade)
+  episode            Episode?  @relation("EpisodeViewingProgress", fields: [episodeId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, titleId, episodeId])
+}
+
+model Watchlist {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  titleId     Int
+  addedAt     DateTime  @default(now())
+  removedAt   DateTime? // When removed (usually after completion)
+
+  user        User      @relation("UserWatchlist", fields: [userId], references: [id], onDelete: Cascade)
+  title       Title     @relation("TitleWatchlist", fields: [titleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, titleId])
 }
