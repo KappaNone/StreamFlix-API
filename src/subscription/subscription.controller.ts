@@ -34,7 +34,8 @@ export class SubscriptionController {
   @ApiCreatedResponse({ type: SubscriptionEntity })
   // Creates a subscription or swaps the user's plan while applying trials/referrals.
   async create(@Body() dto: CreateSubscriptionDto) {
-    const subscription = await this.subscriptionService.createOrUpdateSubscription(dto);
+    const subscription =
+      await this.subscriptionService.createOrUpdateSubscription(dto);
     return new SubscriptionEntity(subscription);
   }
 

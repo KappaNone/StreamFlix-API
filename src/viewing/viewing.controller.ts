@@ -13,7 +13,12 @@ import {
 import { ViewingService } from './viewing.service';
 import { RecordViewingDto, AddToWatchlistDto } from './dto';
 import { ViewingProgressEntity, WatchlistEntity } from './entities';
-import { ApiOkResponse, ApiCreatedResponse, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiOkResponse,
+  ApiCreatedResponse,
+  ApiTags,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 @Controller('viewing')
@@ -28,10 +33,7 @@ export class ViewingController {
    */
   @Post('progress')
   @ApiCreatedResponse({ type: ViewingProgressEntity })
-  recordViewing(
-    @Request() req,
-    @Body() recordViewingDto: RecordViewingDto,
-  ) {
+  recordViewing(@Request() req, @Body() recordViewingDto: RecordViewingDto) {
     return this.viewingService.recordViewing(req.user.id, recordViewingDto);
   }
 
@@ -61,10 +63,7 @@ export class ViewingController {
    */
   @Post('watchlist')
   @ApiCreatedResponse({ type: WatchlistEntity })
-  addToWatchlist(
-    @Request() req,
-    @Body() addToWatchlistDto: AddToWatchlistDto,
-  ) {
+  addToWatchlist(@Request() req, @Body() addToWatchlistDto: AddToWatchlistDto) {
     return this.viewingService.addToWatchlist(req.user.id, addToWatchlistDto);
   }
 

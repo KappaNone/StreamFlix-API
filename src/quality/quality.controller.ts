@@ -59,7 +59,7 @@ export class QualityController {
   @ApiOkResponse({ type: QualityEntity })
   remove(
     @Param('titleId', ParseIntPipe) titleId: number,
-    @Param('qualityName', new ParseEnumPipe(QualityName)) name: QualityName
+    @Param('qualityName', new ParseEnumPipe(QualityName)) name: QualityName,
   ) {
     return this.qualityService.remove(titleId, name);
   }

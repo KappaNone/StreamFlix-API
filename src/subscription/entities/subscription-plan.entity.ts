@@ -16,7 +16,9 @@ export class SubscriptionPlanEntity implements SubscriptionPlan {
   @ApiProperty()
   name: string;
 
-  @ApiProperty({ description: 'Price stored in cents to avoid floating point errors' })
+  @ApiProperty({
+    description: 'Price stored in cents to avoid floating point errors',
+  })
   priceCents: number;
 
   @ApiProperty({ default: 'EUR' })

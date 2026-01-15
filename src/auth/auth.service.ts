@@ -28,9 +28,15 @@ export class AuthService {
    * Register a new user with email and password
    * Generates verification token and sends verification email
    */
-  async register(email: string, password: string, name?: string): Promise<{ message: string }> {
+  async register(
+    email: string,
+    password: string,
+    name?: string,
+  ): Promise<{ message: string }> {
     // Check if user already exists
-    const existingUser = await this.prisma.user.findUnique({ where: { email } });
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email },
+    });
     if (existingUser) {
       throw new BadRequestException('User with this email already exists');
     }
@@ -59,7 +65,10 @@ export class AuthService {
     // Send verification email
     await this.emailService.sendVerificationEmail(email, verificationToken);
 
-    return { message: 'User registered successfully. Please check your email to verify your account.' };
+    return {
+      message:
+        'User registered successfully. Please check your email to verify your account.',
+    };
   }
 
   /**
@@ -75,7 +84,10 @@ export class AuthService {
     }
 
     // Check if token has expired
-    if (user.verificationTokenExpiresAt && user.verificationTokenExpiresAt < new Date()) {
+    if (
+      user.verificationTokenExpiresAt &&
+      user.verificationTokenExpiresAt < new Date()
+    ) {
       throw new BadRequestException('Verification token has expired');
     }
 
@@ -140,7 +152,9 @@ export class AuthService {
 
     // Step 2: Check if email is verified
     if (!user.emailVerified) {
-      throw new UnauthorizedException('Please verify your email before logging in');
+      throw new UnauthorizedException(
+        'Please verify your email before logging in',
+      );
     }
 
     // Step 3: Check if account is locked
@@ -229,7 +243,10 @@ export class AuthService {
 
     if (!user) {
       // For security, don't reveal if user exists
-      return { message: 'If an account with this email exists, a password reset link has been sent.' };
+      return {
+        message:
+          'If an account with this email exists, a password reset link has been sent.',
+      };
     }
 
     // Generate password reset token
@@ -249,13 +266,19 @@ export class AuthService {
     // Send password reset email
     await this.emailService.sendPasswordResetEmail(email, resetToken);
 
-    return { message: 'If an account with this email exists, a password reset link has been sent.' };
+    return {
+      message:
+        'If an account with this email exists, a password reset link has been sent.',
+    };
   }
 
   /**
    * Reset password using reset token
    */
-  async resetPassword(resetToken: string, newPassword: string): Promise<{ message: string }> {
+  async resetPassword(
+    resetToken: string,
+    newPassword: string,
+  ): Promise<{ message: string }> {
     const user = await this.prisma.user.findUnique({
       where: { passwordResetToken: resetToken },
     });
@@ -287,6 +310,9 @@ export class AuthService {
       },
     });
 
-    return { message: 'Password has been reset successfully. You can now log in with your new password.' };
+    return {
+      message:
+        'Password has been reset successfully. You can now log in with your new password.',
+    };
   }
 }

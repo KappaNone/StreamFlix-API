@@ -16,7 +16,14 @@ export class ViewingService {
    * Updates position, completion status, and last viewed timestamp
    */
   async recordViewing(userId: number, recordViewingDto: RecordViewingDto) {
-    const { titleId, episodeId, positionSeconds, totalDurationSeconds, isCompleted, autoPlayNextEpisode } = recordViewingDto;
+    const {
+      titleId,
+      episodeId,
+      positionSeconds,
+      totalDurationSeconds,
+      isCompleted,
+      autoPlayNextEpisode,
+    } = recordViewingDto;
 
     // Validate title exists
     const title = await this.prisma.title.findUnique({
@@ -32,7 +39,9 @@ export class ViewingService {
         where: { id: episodeId },
       });
       if (!episode || episode.titleId !== titleId) {
-        throw new NotFoundException(`Episode with id ${episodeId} not found for title ${titleId}`);
+        throw new NotFoundException(
+          `Episode with id ${episodeId} not found for title ${titleId}`,
+        );
       }
     }
 

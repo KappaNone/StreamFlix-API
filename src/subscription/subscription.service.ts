@@ -100,13 +100,13 @@ export class SubscriptionService {
 
     const discountPercent = invitation
       ? invitation.discountPercent
-      : existing?.discountPercent ?? 0;
+      : (existing?.discountPercent ?? 0);
     const discountEndsAt = invitation
       ? this.addDays(periodStart, invitation.discountDurationDays)
-      : existing?.discountEndsAt ?? null;
+      : (existing?.discountEndsAt ?? null);
     const invitedByUserId = invitation
       ? invitation.inviterId
-      : existing?.invitedByUserId ?? null;
+      : (existing?.invitedByUserId ?? null);
 
     const baseData: Prisma.SubscriptionUncheckedCreateInput = {
       userId,
@@ -228,7 +228,9 @@ export class SubscriptionService {
     });
 
     if (existing) {
-      throw new BadRequestException('An active invitation already exists for this email.');
+      throw new BadRequestException(
+        'An active invitation already exists for this email.',
+      );
     }
 
     const discountPercent = dto.discountPercent ?? 25;
@@ -247,7 +249,9 @@ export class SubscriptionService {
   }
 
   async redeemInvitation(dto: RedeemInvitationDto) {
-    const user = await this.prisma.user.findUnique({ where: { id: dto.userId } });
+    const user = await this.prisma.user.findUnique({
+      where: { id: dto.userId },
+    });
     if (!user) {
       throw new NotFoundException(`User ${dto.userId} not found`);
     }
@@ -259,9 +263,14 @@ export class SubscriptionService {
     });
   }
 
-  private async applyInviterDiscount(inviterId: number, invitation: Invitation) {
+  private async applyInviterDiscount(
+    inviterId: number,
+    invitation: Invitation,
+  ) {
     // Mirrors the invitee's discount on the inviter exactly once.
-    const inviter = await this.prisma.user.findUnique({ where: { id: inviterId } });
+    const inviter = await this.prisma.user.findUnique({
+      where: { id: inviterId },
+    });
 
     if (!inviter || inviter.referralDiscountUsed) {
       return;
@@ -305,10 +314,14 @@ export class SubscriptionService {
   ) {
     // Validates an invitation code and enforces the one-time referral policy per account.
     if (user.referralDiscountUsed) {
-      throw new BadRequestException('Referral discount already used by this account');
+      throw new BadRequestException(
+        'Referral discount already used by this account',
+      );
     }
 
-    const invitation = await this.prisma.invitation.findUnique({ where: { code } });
+    const invitation = await this.prisma.invitation.findUnique({
+      where: { code },
+    });
 
     if (!invitation) {
       throw new NotFoundException('Invitation not found');
