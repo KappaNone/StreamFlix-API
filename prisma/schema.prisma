@@ -16,6 +16,19 @@ model User {
   updatedAt DateTime  @updatedAt
   referralDiscountUsed Boolean @default(false)
 
+  // Email Verification
+  emailVerified        Boolean   @default(false)
+  verificationToken    String?   @unique
+  verificationTokenExpiresAt DateTime?
+
+  // Login Security
+  failedLoginAttempts  Int       @default(0)
+  accountLockedUntil   DateTime?
+
+  // Password Recovery
+  passwordResetToken   String?   @unique
+  passwordResetTokenExpiresAt DateTime?
+
   subscriptions        Subscription[]
   sentInvitations      Invitation[]      @relation("UserInvitations")
   invitedSubscriptions Subscription[]    @relation("UserInvitesReceived")

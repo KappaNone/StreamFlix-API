@@ -27,4 +27,25 @@ export class UserEntity implements User {
 
   @ApiProperty({ default: false })
   referralDiscountUsed: boolean;
+
+  @ApiProperty({ default: false })
+  emailVerified: boolean;
+
+  @Exclude()
+  verificationToken: string | null;
+
+  @Exclude()
+  verificationTokenExpiresAt: Date | null;
+
+  @Exclude()
+  failedLoginAttempts: number;
+
+  @Exclude()
+  accountLockedUntil: Date | null;
+
+  @Exclude()
+  passwordResetToken: string | null;
+
+  @Exclude()
+  passwordResetTokenExpiresAt: Date | null;
 }

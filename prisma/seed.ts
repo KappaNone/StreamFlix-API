@@ -461,7 +461,7 @@ async function main() {
 
   await seedSubscriptionPlans();
 
-  // Create Users
+  // Create Users with verified emails
   const hashedPassword = await bcrypt.hash('password123', 10);
 
   const users = await prisma.user.createMany({
@@ -470,16 +470,19 @@ async function main() {
         name: 'John Doe',
         email: 'john@example.com',
         password: hashedPassword,
+        emailVerified: true,
       },
       {
         name: 'Jane Smith',
         email: 'jane@example.com',
         password: hashedPassword,
+        emailVerified: true,
       },
       {
         name: 'Bob Johnson',
         email: 'bob@example.com',
         password: hashedPassword,
+        emailVerified: true,
       },
     ],
   });
