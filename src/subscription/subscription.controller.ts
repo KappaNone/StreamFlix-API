@@ -6,8 +6,9 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { SubscriptionService } from './subscription.service';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { SubscriptionEntity } from './entities/subscription.entity';
@@ -16,9 +17,12 @@ import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
 import { InvitationEntity } from './entities/invitation.entity';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { RedeemInvitationDto } from './dto/redeem-invitation.dto';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 @Controller('subscriptions')
 @ApiTags('subscriptions')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
 // HTTP surface for listing plans, managing subscriptions, and handling referrals.
 export class SubscriptionController {
   constructor(private readonly subscriptionService: SubscriptionService) {}
