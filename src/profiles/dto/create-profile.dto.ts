@@ -1,8 +1,13 @@
-import { IsString, IsOptional, IsEnum } from 'class-validator';
+import { IsString, IsEnum } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 import { AgeCategory } from '@prisma/client';
 
 export class CreateProfileDto {
-  @IsString() name: string;
-  @IsEnum(AgeCategory) ageCategory: AgeCategory;
-  @IsOptional() @IsString() imageUrl?: string;
+  @ApiProperty({ description: 'Profile name', example: 'Kids Profile' })
+  @IsString()
+  name: string;
+
+  @ApiProperty({ description: 'Age category', enum: AgeCategory, example: AgeCategory.ALL })
+  @IsEnum(AgeCategory)
+  ageCategory: AgeCategory;
 }

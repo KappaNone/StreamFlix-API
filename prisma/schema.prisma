@@ -211,9 +211,10 @@ model Profile {
 }
 
 enum AgeCategory {
-  ZERO
-  THIRTEEN
-  EIGHTEEN
+  ALL
+  KIDS
+  TEENS
+  ADULT
 }
 
 model ProfilePreference {

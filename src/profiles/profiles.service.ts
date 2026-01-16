@@ -9,7 +9,7 @@ export class ProfilesService {
 
   create(userId: number, dto: CreateProfileDto) {
     return this.prisma.profile.create({
-      data: { userId, name: dto.name, ageCategory: dto.ageCategory, imageUrl: dto.imageUrl },
+      data: { userId, name: dto.name, ageCategory: dto.ageCategory },
     });
   }
 
