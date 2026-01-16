@@ -11,6 +11,8 @@ import { EpisodeModule } from './episode/episode.module';
 import { QualityModule } from './quality/quality.module';
 import { SubscriptionModule } from './subscription/subscription.module';
 import { ViewingModule } from './viewing/viewing.module';
+import { ProfilePreferenceModule } from './profile-preference/profile-preference.module';
+import { GenreModule } from './genre/genre.module';
 
 @Module({
   imports: [
@@ -24,6 +26,8 @@ import { ViewingModule } from './viewing/viewing.module';
     QualityModule,
     SubscriptionModule,
     ViewingModule,
+    ProfilePreferenceModule,
+    GenreModule
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -223,7 +223,8 @@ model ProfilePreference {
 
   profile   Profile @relation("ProfileProfilePreferences", fields: [profileId], references: [id], onDelete: Cascade)
 
-  genre     Genre[] @relation("GenreProfilePreferences") 
+  genreProfilePreferences GenreProfilePreference[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -231,10 +232,20 @@ model ProfilePreference {
 model Genre {
   id        Int      @id @default(autoincrement())
   name      String   @unique
-  profilePreferenceId     Int
 
-  profilePreference ProfilePreference @relation("GenreProfilePreferences", fields: [profilePreferenceId], references: [id], onDelete: Cascade)
+  genreProfilePreferences GenreProfilePreference[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model GenreProfilePreference {
+  id                  Int @id @default(autoincrement())
+  genreId             Int
+  profilePreferenceId Int
+
+  genre             Genre             @relation(fields: [genreId], references: [id], onDelete: Cascade)
+  profilePreference ProfilePreference @relation(fields: [profilePreferenceId], references: [id], onDelete: Cascade)
+
+  @@unique([genreId, profilePreferenceId])
 }
