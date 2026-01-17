@@ -58,6 +58,19 @@ describe('ProfilesController', () => {
       expect(result).toEqual(expectedProfile);
       expect(mockProfilesService.create).toHaveBeenCalledWith(userId, createProfileDto);
     });
+
+    it('should throw error if service fails', async () => {
+      const userId = 1;
+      const createProfileDto: CreateProfileDto = {
+        name: 'Kids Profile',
+        ageCategory: 'ZERO' as any,
+      };
+
+      mockProfilesService.create.mockRejectedValue(new Error('Database error'));
+
+      await expect(controller.create(userId, createProfileDto)).rejects.toThrow('Database error');
+      expect(mockProfilesService.create).toHaveBeenCalledWith(userId, createProfileDto);
+    });
   });
 
   describe('findByUser', () => {
@@ -117,6 +130,19 @@ describe('ProfilesController', () => {
       expect(result).toEqual(updatedProfile);
       expect(mockProfilesService.update).toHaveBeenCalledWith(profileId, updateProfileDto);
     });
+
+    it('should throw error if service fails', async () => {
+      const profileId = 1;
+      const updateProfileDto: UpdateProfileDto = {
+        name: 'Updated Profile',
+        ageCategory: 'EIGHTEEN' as any,
+      };
+
+      mockProfilesService.update.mockRejectedValue(new Error('Profile not found'));
+
+      await expect(controller.update(profileId, updateProfileDto)).rejects.toThrow('Profile not found');
+      expect(mockProfilesService.update).toHaveBeenCalledWith(profileId, updateProfileDto);
+    });
   });
 
   describe('remove', () => {
@@ -134,6 +160,15 @@ describe('ProfilesController', () => {
       const result = await controller.remove(profileId);
 
       expect(result).toEqual(deletedProfile);
+      expect(mockProfilesService.remove).toHaveBeenCalledWith(profileId);
+    });
+
+    it('should throw error if service fails', async () => {
+      const profileId = 1;
+
+      mockProfilesService.remove.mockRejectedValue(new Error('Profile not found'));
+
+      await expect(controller.remove(profileId)).rejects.toThrow('Profile not found');
       expect(mockProfilesService.remove).toHaveBeenCalledWith(profileId);
     });
   });
