@@ -2,6 +2,7 @@ import {
   PrismaClient,
   TitleType,
   QualityName,
+  AgeCategory,
 } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
@@ -147,7 +148,7 @@ async function seedFallbackContent() {
       description: 'A thriller about a startup that takes over the streaming world.',
       releaseYear: 2024,
       durationSeconds: 7200,
-  qualities: [QualityName.HD, QualityName.UHD],
+      qualities: [QualityName.HD, QualityName.UHD],
     },
     {
       name: 'StreamFlix Originals: The Series',
@@ -478,7 +479,7 @@ async function seedProfilesAndPreferences() {
     const profile = await prisma.profile.create({
       data: {
         name: `${user.name}'s Profile`,
-        ageCategory: 'ALL',
+        ageCategory: AgeCategory.ALL,
         userId: user.id,
       },
     });
@@ -520,7 +521,6 @@ async function main() {
   await prisma.season.deleteMany();
   await prisma.quality.deleteMany();
   await prisma.title.deleteMany();
-  await prisma.genreProfilePreference.deleteMany();
   await prisma.profilePreference.deleteMany();
   await prisma.profile.deleteMany();
   await prisma.genre.deleteMany();
