@@ -36,6 +36,18 @@ services:
       DEMO_USERS_PASSWORD: ${DEMO_USERS_PASSWORD-}
     networks:
       - prisma-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - server
+    networks:
+      - prisma-network
       
   prisma-studio:
     build:

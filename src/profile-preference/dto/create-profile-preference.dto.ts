@@ -1,8 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt } from 'class-validator';
+import { IsInt, IsNotEmpty } from 'class-validator';
 
 export class CreateProfilePreferenceDto {
   @ApiProperty()
+  @IsNotEmpty()
   @IsInt()
   profileId: number;
 }

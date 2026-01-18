@@ -1,12 +1,10 @@
 import { Injectable } from '@nestjs/common';
 
+const baseUrl = process.env.FRONTEND_URL || 'http://localhost:8080';
+
 @Injectable()
 export class EmailService {
-  /**
-   * Send verification email with token
-   */
   async sendVerificationEmail(email: string, token: string): Promise<void> {
-    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     const verificationUrl = `${baseUrl}/auth/verify-email?token=${token}`;
 
     console.log(`
@@ -24,11 +22,7 @@ export class EmailService {
     `);
   }
 
-  /**
-   * Send password reset email with token
-   */
   async sendPasswordResetEmail(email: string, token: string): Promise<void> {
-    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
     const resetUrl = `${baseUrl}/auth/reset-password?token=${token}`;
 
     console.log(`
@@ -46,9 +40,6 @@ export class EmailService {
     `);
   }
 
-  /**
-   * Send account locked notification
-   */
   async sendAccountLockedEmail(email: string, unlockTime: Date): Promise<void> {
     console.log(`
       ========================================
@@ -64,9 +55,6 @@ export class EmailService {
     `);
   }
 
-  /**
-   * Send welcome email after successful registration
-   */
   async sendWelcomeEmail(email: string, name?: string): Promise<void> {
     console.log(`
       ========================================

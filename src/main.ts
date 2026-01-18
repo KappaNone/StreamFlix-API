@@ -14,7 +14,6 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization'],
   },
 });
-    
   const config = new DocumentBuilder()
     .setTitle('StreamFlix API')
     .setDescription('StreamFlix API docs')

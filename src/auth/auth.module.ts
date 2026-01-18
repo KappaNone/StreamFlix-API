@@ -20,7 +20,7 @@ import { EmailService } from './email.service';
         }
         return {
           secret,
-          signOptions: { expiresIn: '30m' },
+          signOptions: { expiresIn: '15m' },
         };
       },
     }),

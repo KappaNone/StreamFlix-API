@@ -143,26 +143,26 @@ export class AuthService {
    * Tracks failed login attempts and locks account after 3 failures
    */
   async login(email: string, password: string): Promise<AuthEntity> {
-    // Step 1: Fetch user
+    // Fetch user
     const user = await this.prisma.user.findUnique({ where: { email } });
 
     if (!user) {
       throw new NotFoundException(`No user found for email: ${email}`);
     }
 
-    // Step 2: Check if email is verified
+    // Check if email is verified
     if (!user.emailVerified) {
       throw new UnauthorizedException(
         'Please verify your email before logging in',
       );
     }
 
-    // Step 2b: Check if account is active
+    // Check if account is active
     if (user.isActive === false) {
       throw new UnauthorizedException('Account is deactivated');
     }
 
-    // Step 3: Check if account is locked
+    // Check if account is locked
     if (user.accountLockedUntil && user.accountLockedUntil > new Date()) {
       const remainingTime = Math.ceil(
         (user.accountLockedUntil.getTime() - Date.now()) / 60000,
@@ -172,7 +172,7 @@ export class AuthService {
       );
     }
 
-    // Step 4: Reset failed attempts if lock period has passed
+    // Reset failed attempts if lock period has passed
     if (user.accountLockedUntil && user.accountLockedUntil <= new Date()) {
       await this.prisma.user.update({
         where: { id: user.id },
@@ -183,7 +183,7 @@ export class AuthService {
       });
     }
 
-    // Step 5: Check password
+    // Check password
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {

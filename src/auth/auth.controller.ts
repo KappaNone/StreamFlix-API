@@ -78,7 +78,6 @@ export class AuthController {
   @Get('reset-password')
   @ApiOkResponse()
   resetPasswordLink(@Query('token') resetToken: string) {
-    // In a real app, you'd redirect to a frontend page
     // For now, just return the token so the frontend can use it
     return { resetToken, message: 'Use this token to reset your password' };
   }
