@@ -472,10 +472,12 @@ async function seedProfilesAndPreferences() {
   const users = await prisma.user.findMany();
   const genres = await prisma.genre.findMany();
 
-  if (users.length === 0 || genres.length === 0) return;
+  if (users.length === 0 || genres.length === 0) {
+    console.warn('Skipping profile preferences seeding');
+    return;
+  }
 
   for (const user of users) {
-    // Create a profile for each user
     const profile = await prisma.profile.create({
       data: {
         name: `${user.name}'s Profile`,
@@ -484,18 +486,16 @@ async function seedProfilesAndPreferences() {
       },
     });
 
-    // Create profile preferences with random genres
-    const numGenres = Math.floor(Math.random() * 3) + 2; // 2-4 genres
-    const shuffledGenres = genres.sort(() => 0.5 - Math.random());
-    const selectedGenres = shuffledGenres.slice(0, numGenres);
+    const preference = await prisma.profilePreference.create({
+      data: {
+        profileId: profile.id,
+      },
+    });
 
-    for (const genre of selectedGenres) {
-      const preference = await prisma.profilePreference.create({
-        data: {
-          profileId: profile.id,
-        },
-      });
+    const shuffled = [...genres].sort(() => 0.5 - Math.random());
+    const selected = shuffled.slice(0, Math.floor(Math.random() * 3) + 2);
 
+    for (const genre of selected) {
       await prisma.genreProfilePreference.create({
         data: {
           genreId: genre.id,
@@ -507,7 +507,6 @@ async function seedProfilesAndPreferences() {
 
   console.log('Profiles and preferences seeded successfully!');
 }
-
 async function main() {
   console.log('Starting seed process...');
 
