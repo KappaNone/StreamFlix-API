@@ -2,6 +2,14 @@
 
 NestJS + Prisma backend that powers StreamFlix. It exposes CRUD endpoints for titles, seasons, episodes, and now subscription management with trials, invitations, and plan catalog support.
 
+## Features
+
+- JSON and XML support for all endpoints (set `Accept: application/xml` for XML responses, `Content-Type: application/xml` for XML requests)
+- Swagger documentation at `/docs`
+- Prisma ORM with PostgreSQL
+- JWT authentication
+- Subscription management with trials and referrals
+
 ## Prerequisites
 
 - Node.js 20+
@@ -23,6 +31,13 @@ If you use Docker, you can start the stack with:
 ```powershell
 npm run docker
 ```
+
+### API Formats
+
+The API supports both JSON and XML formats:
+
+- **JSON**: Default format
+- **XML**: Set `Accept: application/xml` in request headers for XML responses. For POST/PUT requests, set `Content-Type: application/xml` and send XML data.
 
 ### Developer Tooling
 

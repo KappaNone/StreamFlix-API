@@ -2,6 +2,8 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { XmlInterceptor } from './common/xml.interceptor';
+import * as xmlparser from 'express-xml-bodyparser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -23,6 +25,12 @@ async function bootstrap() {
   SwaggerModule.setup('docs', app, doc);
 
   app.useGlobalPipes(new ValidationPipe());
+
+  // Enable XML body parsing
+  app.use(xmlparser());
+
+  // Enable XML response transformation
+  app.useGlobalInterceptors(new XmlInterceptor());
 
   app.enableShutdownHooks();
 
