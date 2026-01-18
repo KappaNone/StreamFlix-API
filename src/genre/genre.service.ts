@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateGenreDto } from './dto/create-genre.dto';
 import { UpdateGenreDto } from './dto/update-genre.dto';
@@ -15,20 +15,36 @@ export class GenreService {
     return this.prisma.genre.findMany();
   }
 
-  findOne(id: number) {
-    return this.prisma.genre.findUnique({
+  async findOne(id: number) {
+    const genre = await this.prisma.genre.findUnique({
       where: { id },
     });
+    if (!genre) {
+      throw new NotFoundException(`Genre with id ${id} not found`);
+    }
+    return genre;
   }
 
-  update(id: number, dto: UpdateGenreDto) {
+  async update(id: number, dto: UpdateGenreDto) {
+    const genre = await this.prisma.genre.findUnique({
+      where: { id },
+    });
+    if (!genre) {
+      throw new NotFoundException(`Genre with id ${id} not found`);
+    }
     return this.prisma.genre.update({
       where: { id },
       data: dto,
     });
   }
 
-  remove(id: number) {
+  async remove(id: number) {
+    const genre = await this.prisma.genre.findUnique({
+      where: { id },
+    });
+    if (!genre) {
+      throw new NotFoundException(`Genre with id ${id} not found`);
+    }
     return this.prisma.genre.delete({
       where: { id },
     });
