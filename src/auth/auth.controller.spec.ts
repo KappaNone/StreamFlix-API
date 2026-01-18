@@ -4,11 +4,16 @@ import { AuthService } from './auth.service';
 
 describe('AuthController', () => {
   let controller: AuthController;
+  let authService: { login: jest.Mock };
 
   beforeEach(async () => {
+    authService = {
+      login: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
-      providers: [AuthService],
+      providers: [{ provide: AuthService, useValue: authService }],
     }).compile();
 
     controller = module.get<AuthController>(AuthController);
@@ -16,5 +21,13 @@ describe('AuthController', () => {
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
+  });
+
+  it('delegates login to AuthService', async () => {
+    authService.login.mockResolvedValue({ accessToken: 'token' });
+
+    await controller.login({ email: 'a@b.com', password: 'pw' });
+
+    expect(authService.login).toHaveBeenCalledWith('a@b.com', 'pw');
   });
 });
