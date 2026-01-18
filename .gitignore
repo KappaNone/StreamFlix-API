@@ -62,3 +62,6 @@ lerna-debug.log*
 2526_Assignment Data Processing EN*.docx
 DataProcessing Modulebook*.docx
 docs/extracted/
+
+# Local helper scripts
+tools/
