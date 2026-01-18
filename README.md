@@ -92,6 +92,13 @@ Example read-only objects:
 - First subscription per user automatically gets a 7-day trial (pulls from each plan's `trialDays`).
 - Invitation codes grant the same temporary discount to both invitee and inviter for `discountDurationDays`, and every account can only redeem a referral discount once.
 
+## Front-end website
+```powershell
+cd frontend
+npx serve
+```
+The front-end will be located on localhost:3000.
+ 
 ## Testing & Linting
 
 ```powershell
