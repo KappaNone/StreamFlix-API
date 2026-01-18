@@ -1,18 +1,27 @@
-<h1 id="welcome"></h1>
-<button onclick="logout()">Logout</button>
+<!DOCTYPE html>
+<html lang="en">
 
-<script>
-  const name = localStorage.getItem("name");
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+</head>
 
-  if (!name) {
-    window.location.href = "index.html";
-  }
+<body>
 
-  document.getElementById("welcome").innerText =
-    `Welcome, ${name}!`;
+  <h1 id="welcome"></h1>
+  <button onclick="logout()">Logout</button>
 
-  function logout() {
-    localStorage.clear();
-    window.location.href = "index.html";
-  }
-</script>
+  <script>
+    const email = localStorage.getItem("email")
+    document.getElementById("welcome").innerText =
+      `Welcome, ${email}!`;
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = "index.html";
+    }
+  </script>
+</body>
+
+</html>
