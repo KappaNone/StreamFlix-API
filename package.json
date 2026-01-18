@@ -22,8 +22,13 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "db:deploy": "npx prisma migrate reset --force",
+    "docker:up": "docker compose up -d --build",
+    "docker:down": "docker compose down",
     "docker": "docker compose -f docker-compose.yml up --build",
-    "studio": "npx prisma studio"
+    "studio": "npx prisma studio",
+    "frontend:serve": "npx.cmd --yes serve frontend -l 5174",
+    "frontend:restart": "cmd /c \"for /f \\\"tokens=5\\\" %%a in ('netstat -aon ^| find \\\":5174\\\" ^| find \\\"LISTENING\\\"') do taskkill /F /PID %%a /T >nul 2>nul & npx --yes serve frontend -l 5174\"",
+    "stack:start": "npm run docker:up && npm run frontend:serve"
   },
   "jest": {
     "collectCoverageFrom": [

@@ -180,6 +180,36 @@ describe('HTTP Endpoints (e2e)', () => {
       });
   });
 
+  describe('Auth (negative cases)', () => {
+    it('POST /auth/login missing password -> 400', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email: testUserEmail })
+        .expect(400);
+    });
+
+    it('POST /auth/login invalid email -> 400', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email: 'not-an-email', password: testUserPassword })
+        .expect(400);
+    });
+
+    it('POST /auth/login wrong password -> 401', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email: testUserEmail, password: 'WrongPassword123!' })
+        .expect(401);
+    });
+
+    it('POST /auth/login unknown email -> 404', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email: 'does.not.exist@streamflix.local', password: 'Password123!' })
+        .expect(404);
+    });
+  });
+
   it('POST /auth/login returns JWT', async () => {
     const token = await getAccessToken();
     expect(typeof token).toBe('string');
@@ -231,6 +261,32 @@ describe('HTTP Endpoints (e2e)', () => {
     });
   });
 
+  describe('Title (negative cases)', () => {
+    it('GET /title/:id not found -> 404', async () => {
+      await request(app.getHttpServer())
+        .get('/title/99999999')
+        .expect(404);
+    });
+
+    it('GET /title/:id invalid id -> 400', async () => {
+      await request(app.getHttpServer())
+        .get('/title/not-a-number')
+        .expect(400);
+    });
+
+    it('POST /title invalid enum -> 400', async () => {
+      await request(app.getHttpServer())
+        .post('/title')
+        .send({
+          name: `E2E Title Invalid ${Date.now()}`,
+          type: 'NOT_A_REAL_TYPE',
+          description: 'bad payload',
+          releaseYear: 2025,
+        })
+        .expect(400);
+    });
+  });
+
   describe('Subscription endpoints (JWT protected)', () => {
     let subscriptionId: number;
     let invitationCode: string;
@@ -262,6 +318,39 @@ describe('HTTP Endpoints (e2e)', () => {
       expect(res.headers['content-type']).toContain('application/xml');
       expect(res.text.trim().startsWith('<')).toBe(true);
       expect(res.text).toContain('basic_sd');
+    });
+
+    it('POST /subscriptions without auth -> 401', async () => {
+      await request(app.getHttpServer())
+        .post('/subscriptions')
+        .send({ userId: testUserId, planCode: 'basic_sd' })
+        .expect(401);
+    });
+
+    it('POST /subscriptions invalid userId -> 400', async () => {
+      const token = await getAccessToken();
+      await request(app.getHttpServer())
+        .post('/subscriptions')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ userId: 0, planCode: 'basic_sd' })
+        .expect(400);
+    });
+
+    it('POST /subscriptions plan not found -> 404', async () => {
+      const token = await getAccessToken();
+      await request(app.getHttpServer())
+        .post('/subscriptions')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ userId: testUserId, planCode: 'does_not_exist' })
+        .expect(404);
+    });
+
+    it('GET /subscriptions/:id not found -> 404', async () => {
+      const token = await getAccessToken();
+      await request(app.getHttpServer())
+        .get('/subscriptions/99999999')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(404);
     });
 
     it('POST /subscriptions (create inviter subscription)', async () => {
@@ -334,6 +423,24 @@ describe('HTTP Endpoints (e2e)', () => {
       expect([200, 201]).toContain(res.status);
       expect(res.body).toHaveProperty('code');
       invitationCode = res.body.code;
+    });
+
+    it('POST /subscriptions/invitations duplicate active invite -> 400', async () => {
+      const token = await getAccessToken();
+      await request(app.getHttpServer())
+        .post('/subscriptions/invitations')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ inviterUserId: testUserId, inviteeEmail })
+        .expect(400);
+    });
+
+    it('POST /subscriptions/invitations/redeem invalid code -> 404', async () => {
+      const token = await getAccessToken();
+      await request(app.getHttpServer())
+        .post('/subscriptions/invitations/redeem')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ code: 'NO_SUCH_CODE', userId: inviteeUserId })
+        .expect(404);
     });
 
     it('POST /subscriptions/invitations/redeem', async () => {
