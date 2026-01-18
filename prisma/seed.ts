@@ -444,6 +444,69 @@ async function seedViewingData(users: any[], titles: any[]) {
   console.log('Viewing data seeded successfully!');
 }
 
+async function seedGenres() {
+  const genres = [
+    { name: 'Action' },
+    { name: 'Comedy' },
+    { name: 'Drama' },
+    { name: 'Horror' },
+    { name: 'Sci-Fi' },
+    { name: 'Romance' },
+    { name: 'Thriller' },
+    { name: 'Documentary' },
+  ];
+
+  for (const genre of genres) {
+    await prisma.genre.upsert({
+      where: { name: genre.name },
+      update: {},
+      create: genre,
+    });
+  }
+
+  console.log(`Seeded ${genres.length} genres.`);
+}
+
+async function seedProfilesAndPreferences() {
+  const users = await prisma.user.findMany();
+  const genres = await prisma.genre.findMany();
+
+  if (users.length === 0 || genres.length === 0) return;
+
+  for (const user of users) {
+    // Create a profile for each user
+    const profile = await prisma.profile.create({
+      data: {
+        name: `${user.name}'s Profile`,
+        ageCategory: 'ALL',
+        userId: user.id,
+      },
+    });
+
+    // Create profile preferences with random genres
+    const numGenres = Math.floor(Math.random() * 3) + 2; // 2-4 genres
+    const shuffledGenres = genres.sort(() => 0.5 - Math.random());
+    const selectedGenres = shuffledGenres.slice(0, numGenres);
+
+    for (const genre of selectedGenres) {
+      const preference = await prisma.profilePreference.create({
+        data: {
+          profileId: profile.id,
+        },
+      });
+
+      await prisma.genreProfilePreference.create({
+        data: {
+          genreId: genre.id,
+          profilePreferenceId: preference.id,
+        },
+      });
+    }
+  }
+
+  console.log('Profiles and preferences seeded successfully!');
+}
+
 async function main() {
   console.log('Starting seed process...');
 
@@ -457,7 +520,10 @@ async function main() {
   await prisma.season.deleteMany();
   await prisma.quality.deleteMany();
   await prisma.title.deleteMany();
-  await prisma.quality.deleteMany();
+  await prisma.genreProfilePreference.deleteMany();
+  await prisma.profilePreference.deleteMany();
+  await prisma.profile.deleteMany();
+  await prisma.genre.deleteMany();
   await prisma.user.deleteMany();
 
   await seedSubscriptionPlans();
@@ -500,6 +566,10 @@ async function main() {
   console.log(`Created ${users.count} users`);
 
   await seedDemoInvitations('john@example.com');
+
+  await seedGenres();
+
+  await seedProfilesAndPreferences();
 
   if (HAS_TMDB_KEY) {
     try {
