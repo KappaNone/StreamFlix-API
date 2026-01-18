@@ -1,0 +1,11 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Restart Nest dev server",
+			"type": "shell",
+			"command": "docker restart streamflix-api-server-1",
+			"isBackground": false
+		}
+	]
+}

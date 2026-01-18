@@ -6,7 +6,15 @@ import { XmlInterceptor } from './common/xml.interceptor';
 import * as xmlparser from 'express-xml-bodyparser';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+  cors: {
+    origin: true,          
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  },
+});
+    
   const config = new DocumentBuilder()
     .setTitle('StreamFlix API')
     .setDescription('StreamFlix API docs')

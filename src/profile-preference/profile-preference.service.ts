@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProfilePreferenceDto } from './dto/create-profile-preference.dto';
 import { UpdateProfilePreferenceDto } from './dto/update-profile-preference.dto';
@@ -15,10 +15,14 @@ export class ProfilePreferenceService {
     return this.prisma.profilePreference.findMany();
   }
 
-  findOne(id: number) {
-    return this.prisma.profilePreference.findUnique({
-      where: { id },
-    });
+
+
+  async findOne(id: number) {
+    const profilePreference = await this.prisma.profilePreference.findUnique({ where: { id } });
+    if (!profilePreference) {
+      throw new NotFoundException(`profilePreference ${id} not found`);
+    }
+    return profilePreference;
   }
 
   findByProfile(profileId: number) {
