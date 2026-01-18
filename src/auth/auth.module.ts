@@ -12,9 +12,17 @@ import { EmailService } from './email.service';
   imports: [
     PrismaModule,
     PassportModule,
-    JwtModule.register({
-      secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: '30m' },
+    JwtModule.registerAsync({
+      useFactory: () => {
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+          throw new Error('JWT_SECRET is not set');
+        }
+        return {
+          secret,
+          signOptions: { expiresIn: '30m' },
+        };
+      },
     }),
     UsersModule,
   ],

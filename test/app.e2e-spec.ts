@@ -1,17 +1,24 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
+import { ensureE2EEnv } from './e2e-env';
+import { XmlInterceptor } from '../src/common/xml.interceptor';
+import * as xmlparser from 'express-xml-bodyparser';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
 
   beforeEach(async () => {
+    ensureE2EEnv();
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(new ValidationPipe());
+    app.use(xmlparser());
+    app.useGlobalInterceptors(new XmlInterceptor());
     await app.init();
   });
 
@@ -19,10 +26,12 @@ describe('AppController (e2e)', () => {
     return request(app.getHttpServer())
       .get('/')
       .expect(200)
-      .expect('Hello World!');
+      .expect({ message: 'Hello Worlds!' });
   });
 
   afterAll(async () => {
-    await app.close();
+    if (app) {
+      await app.close();
+    }
   });
 });
