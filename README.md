@@ -102,7 +102,7 @@ npm run test -- subscription
 Use `npm run test:e2e` for the full end-to-end suite once a database is available.
 
 ## Email Verification Token
-- After running npm run docker, and registering a user, the verification link with the token should be in the console where you ran npm run docker.
+After running `npm run docker`, and registering a user using the front-end, the verification link with the token should be in the console where you ran `npm run docker`.
 
 ## Documentation
 
