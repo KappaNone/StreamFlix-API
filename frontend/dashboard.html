@@ -1,0 +1,18 @@
+<h1 id="welcome"></h1>
+<button onclick="logout()">Logout</button>
+
+<script>
+  const name = localStorage.getItem("name");
+
+  if (!name) {
+    window.location.href = "index.html";
+  }
+
+  document.getElementById("welcome").innerText =
+    `Welcome, ${name}!`;
+
+  function logout() {
+    localStorage.clear();
+    window.location.href = "index.html";
+  }
+</script>
