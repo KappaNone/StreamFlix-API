@@ -57,3 +57,8 @@ lerna-debug.log*
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+
+# Local course documents / extracted artifacts (do not commit)
+2526_Assignment Data Processing EN*.docx
+DataProcessing Modulebook*.docx
+docs/extracted/

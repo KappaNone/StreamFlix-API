@@ -157,6 +157,11 @@ export class AuthService {
       );
     }
 
+    // Step 2b: Check if account is active
+    if (user.isActive === false) {
+      throw new UnauthorizedException('Account is deactivated');
+    }
+
     // Step 3: Check if account is locked
     if (user.accountLockedUntil && user.accountLockedUntil > new Date()) {
       const remainingTime = Math.ceil(

@@ -4,6 +4,7 @@ import {
   QualityName,
 } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 
 const prisma = new PrismaClient();
 
@@ -461,8 +462,14 @@ async function main() {
 
   await seedSubscriptionPlans();
 
-  // Create Users with verified emails
-  const hashedPassword = await bcrypt.hash('password123', 10);
+  // Create demo users (password provided via env; no hardcoded credentials)
+  const demoPassword =
+    process.env.DEMO_USERS_PASSWORD ??
+    crypto.randomBytes(12).toString('base64url');
+  if (!process.env.DEMO_USERS_PASSWORD) {
+    console.log(`Generated DEMO_USERS_PASSWORD for this seed run: ${demoPassword}`);
+  }
+  const hashedPassword = await bcrypt.hash(demoPassword, 10);
 
   const users = await prisma.user.createMany({
     data: [
@@ -471,18 +478,21 @@ async function main() {
         email: 'john@example.com',
         password: hashedPassword,
         emailVerified: true,
+        isActive: true,
       },
       {
         name: 'Jane Smith',
         email: 'jane@example.com',
         password: hashedPassword,
         emailVerified: true,
+        isActive: true,
       },
       {
         name: 'Bob Johnson',
         email: 'bob@example.com',
         password: hashedPassword,
         emailVerified: true,
+        isActive: true,
       },
     ],
   });

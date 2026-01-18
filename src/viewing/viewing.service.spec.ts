@@ -4,15 +4,65 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 describe('ViewingService', () => {
   let service: ViewingService;
-  let prisma: PrismaService;
+
+  const prismaMock = {
+    title: {
+      findUnique: jest.fn(),
+    },
+    episode: {
+      findUnique: jest.fn(),
+    },
+    viewingProgress: {
+      upsert: jest.fn(),
+      findMany: jest.fn(),
+      deleteMany: jest.fn(),
+    },
+    watchlist: {
+      updateMany: jest.fn(),
+      findUnique: jest.fn(),
+      upsert: jest.fn(),
+      findMany: jest.fn(),
+      update: jest.fn(),
+    },
+  };
 
   beforeEach(async () => {
+    prismaMock.title.findUnique.mockImplementation(async ({ where }: any) => ({
+      id: where.id,
+    }));
+    prismaMock.episode.findUnique.mockResolvedValue(null);
+    prismaMock.viewingProgress.upsert.mockImplementation(async ({ create, update }: any) => ({
+      userId: create.userId,
+      titleId: create.titleId,
+      episodeId: create.episodeId ?? null,
+      positionSeconds: update.positionSeconds ?? create.positionSeconds,
+      totalDurationSeconds: update.totalDurationSeconds ?? create.totalDurationSeconds,
+      isCompleted: update.isCompleted ?? create.isCompleted,
+      autoPlayNextEpisode: update.autoPlayNextEpisode ?? create.autoPlayNextEpisode,
+    }));
+    prismaMock.viewingProgress.findMany.mockResolvedValue([]);
+    prismaMock.viewingProgress.deleteMany.mockResolvedValue({ count: 0 });
+    prismaMock.watchlist.updateMany.mockResolvedValue({ count: 1 });
+    prismaMock.watchlist.findUnique.mockResolvedValue(null);
+    prismaMock.watchlist.upsert.mockImplementation(async ({ create }: any) => ({
+      userId: create.userId,
+      titleId: create.titleId,
+      removedAt: null,
+    }));
+    prismaMock.watchlist.findMany.mockResolvedValue([]);
+    prismaMock.watchlist.update.mockResolvedValue({});
+
     const module: TestingModule = await Test.createTestingModule({
-      providers: [ViewingService, PrismaService],
+      providers: [
+        ViewingService,
+        {
+          provide: PrismaService,
+          useValue: prismaMock,
+        },
+      ],
     }).compile();
 
     service = module.get<ViewingService>(ViewingService);
-    prisma = module.get<PrismaService>(PrismaService);
   });
 
   it('should be defined', () => {

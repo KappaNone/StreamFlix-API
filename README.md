@@ -26,6 +26,9 @@ npm run studio # optional – inspect data
 npm run start:dev
 ```
 
+For demo seed users, set a password via `DEMO_USERS_PASSWORD` in your `.env`.
+If it is not set, the seed will generate a random password and print it once.
+
 If you use Docker, you can start the stack with:
 
 ```powershell
@@ -48,6 +51,30 @@ The API supports both JSON and XML formats:
 
 - `npx prisma generate` whenever `prisma/schema.prisma` changes.
 - `npm run db:deploy` resets the database using migrations and seeds sample titles, users, subscription plans, and a demo invitation.
+
+## Internal Employees (DBMS-only)
+
+The assignment requires three internal employee roles that work **directly** in the DBMS (not via the API):
+
+- **Junior**: read basic account + profile info.
+- **Mid**: read basic info + limited changes (profile settings + activate/deactivate accounts), no financial/subscription data.
+- **Senior**: full access including subscriptions and viewing history.
+
+This is implemented at the PostgreSQL level via roles, views, and grants in the migration
+[prisma/migrations/20260118130000_internal_employees_dbms_access/migration.sql](prisma/migrations/20260118130000_internal_employees_dbms_access/migration.sql).
+
+To avoid hardcoded passwords in the repository, the migration only creates **NOLOGIN roles**.
+Create your own DBMS login users and grant them a role, for example:
+
+```sql
+CREATE ROLE streamflix_junior LOGIN PASSWORD 'choose_a_password';
+GRANT streamflix_junior_role TO streamflix_junior;
+```
+
+Example read-only objects:
+
+- `public.employee_user_basic`
+- `public.employee_profile_basic`
 
 ## Subscription API Snapshot
 
