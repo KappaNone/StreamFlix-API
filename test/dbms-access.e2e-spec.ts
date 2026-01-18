@@ -93,7 +93,7 @@ describe('DBMS Employee Access (smoke)', () => {
     const okUpdate = runDockerPsql(
       [
         'SET ROLE streamflix_mid_role;',
-        'UPDATE "User" SET "isActive" = true WHERE "id" = (SELECT "id" FROM "User" ORDER BY "id" LIMIT 1);',
+        'UPDATE "User" SET "isActive" = true WHERE "id" = (SELECT "id" FROM public.employee_user_basic ORDER BY "id" LIMIT 1);',
       ].join('\n'),
     );
 
