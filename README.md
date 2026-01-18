@@ -97,7 +97,7 @@ Example read-only objects:
 cd frontend
 npx serve
 ```
-The front-end will be located on localhost:3000.
+The terminal will show which port the website is located.
  
 ## Testing & Linting
 
