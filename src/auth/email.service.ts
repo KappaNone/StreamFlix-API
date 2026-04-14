@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-const baseUrl = 'http://localhost:4000';
+const baseUrl = process.env.FRONTEND_URL || 'http://localhost:4000';
 
 @Injectable()
 export class EmailService {
