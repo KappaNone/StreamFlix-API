@@ -25,7 +25,9 @@ export class XmlInterceptor implements NestInterceptor {
 
           const xmlInput = isPrimitive
             ? { response: { _text: data == null ? '' : String(data) } }
-            : data;
+            : Array.isArray(data)
+              ? { items: { item: data } }
+              : { response: data };
 
           const xmlData = js2xml(xmlInput, {
             compact: true,

@@ -26,7 +26,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
 
   // Enable XML body parsing
-  app.use(xmlparser());
+  app.use(xmlparser({ explicitArray: false, explicitRoot: false }));
 
   // Enable XML response transformation
   app.useGlobalInterceptors(new XmlInterceptor());
