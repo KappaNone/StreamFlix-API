@@ -220,8 +220,10 @@ describe('HTTP Endpoints (e2e)', () => {
     let titleId: number;
 
     it('POST /title', async () => {
+      const token = await getAccessToken();
       const res = await request(app.getHttpServer())
         .post('/title')
+        .set('Authorization', `Bearer ${token}`)
         .send({
           name: `E2E Title ${Date.now()}`,
           type: TitleType.MOVIE,
@@ -235,27 +237,37 @@ describe('HTTP Endpoints (e2e)', () => {
     });
 
     it('GET /title', async () => {
-      const res = await request(app.getHttpServer()).get('/title').expect(200);
+      const token = await getAccessToken();
+      const res = await request(app.getHttpServer())
+        .get('/title')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
       expect(Array.isArray(res.body)).toBe(true);
     });
 
     it('GET /title/:id', async () => {
+      const token = await getAccessToken();
       const res = await request(app.getHttpServer())
         .get(`/title/${titleId}`)
+        .set('Authorization', `Bearer ${token}`)
         .expect(200);
       expect(res.body).toHaveProperty('id', titleId);
     });
 
     it('PATCH /title/:id', async () => {
+      const token = await getAccessToken();
       const res = await request(app.getHttpServer())
         .patch(`/title/${titleId}`)
+        .set('Authorization', `Bearer ${token}`)
         .send({ description: 'Updated by e2e' });
       expect([200, 201]).toContain(res.status);
     });
 
     it('DELETE /title/:id', async () => {
+      const token = await getAccessToken();
       const res = await request(app.getHttpServer())
         .delete(`/title/${titleId}`)
+        .set('Authorization', `Bearer ${token}`)
         .expect(200);
       expect(res.body).toBeDefined();
     });
@@ -263,20 +275,26 @@ describe('HTTP Endpoints (e2e)', () => {
 
   describe('Title (negative cases)', () => {
     it('GET /title/:id not found -> 404', async () => {
+      const token = await getAccessToken();
       await request(app.getHttpServer())
         .get('/title/99999999')
+        .set('Authorization', `Bearer ${token}`)
         .expect(404);
     });
 
     it('GET /title/:id invalid id -> 400', async () => {
+      const token = await getAccessToken();
       await request(app.getHttpServer())
         .get('/title/not-a-number')
+        .set('Authorization', `Bearer ${token}`)
         .expect(400);
     });
 
     it('POST /title invalid enum -> 400', async () => {
+      const token = await getAccessToken();
       await request(app.getHttpServer())
         .post('/title')
+        .set('Authorization', `Bearer ${token}`)
         .send({
           name: `E2E Title Invalid ${Date.now()}`,
           type: 'NOT_A_REAL_TYPE',
