@@ -13,9 +13,19 @@ NestJS + Prisma backend that powers StreamFlix. It exposes CRUD endpoints for ti
 ## Prerequisites
 
 - Node.js 20+
-- Docker (optional but recommended for Postgres)
+- Docker
 
 ## Getting Started
+
+You need to have Docker and node js installed on the machine.
+Create a file named ".env" and copy the contents 
+While running docker you can start the stack with the following command inside the project folder or in the vs code terminal:
+
+```powershell
+npm run docker
+```
+
+In case nothing works this is an optional workaround that might work but last case solution:
 
 ```powershell
 npm install
@@ -29,11 +39,6 @@ npm run start:dev
 For demo seed users, set a password via `DEMO_USERS_PASSWORD` in your `.env`.
 If it is not set, the seed will generate a random password and print it once.
 
-If you use Docker, you can start the stack with:
-
-```powershell
-npm run docker
-```
 
 ### API Formats
 
