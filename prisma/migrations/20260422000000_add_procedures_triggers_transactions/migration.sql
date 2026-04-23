@@ -163,12 +163,15 @@ BEGIN
   
   -- Apply discount to user's subscription (if they have one)
   UPDATE "Subscription"
-  SET 
+  SET
     "discountPercent" = v_discount_percent,
     "discountEndsAt" = NOW() + (v_discount_days || ' days')::INTERVAL,
     "updatedAt" = NOW()
-  WHERE "userId" = user_id AND "status" = 'ACTIVE'
-  LIMIT 1;
+  WHERE "id" = (
+    SELECT "id" FROM "Subscription"
+    WHERE "userId" = user_id AND "status" = 'ACTIVE'
+    LIMIT 1
+  );
   
   RETURN QUERY
   SELECT 
