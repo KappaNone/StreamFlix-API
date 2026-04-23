@@ -17,8 +17,8 @@ NestJS + Prisma backend that powers StreamFlix. It exposes CRUD endpoints for ti
 
 ## Getting Started
 
-You need to have Docker and node js installed on the machine.
-Create a file named ".env" and copy the contents 
+You need to have Docker and Node.js installed on the machine.
+You will receive a separate file with the credentials named ".env". Copy this file inside the project folder.
 While running docker you can start the stack with the following command inside the project folder or in the vs code terminal:
 
 ```powershell
